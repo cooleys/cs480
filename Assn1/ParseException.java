@@ -1,8 +1,8 @@
-//
-//	class ParseExeption
-//		errors reported by the parser
-//		written by Tim Budd, Winter term 2011
-//
+/*
+*	class ParseExeption
+*		errors reported by the parser
+*		written by Tim Budd, Winter term 2011
+*/
 
 class ParseException extends Exception {
 	private static String messages [ ] = {

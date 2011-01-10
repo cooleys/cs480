@@ -1,11 +1,8 @@
-//
-//		Compiler for CS 480
-//	class Lexer
-//
-//		Written by Tim Budd, Winter term 2011
-//
-//		modified by: 
-//
+/*
+*	Sarah Cooley
+*	CS480 - Winter 2011
+*	Assignment1
+*/
 
 import java.io.*;
 
@@ -25,7 +22,7 @@ public class Lexer {
 	private void skipWhiteSpace() throws ParseException, IOException {
 		// your code here
 	}
-	
+
 	public void nextLex() throws ParseException {
 		// your code here
 	}
