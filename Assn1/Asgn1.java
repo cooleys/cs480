@@ -2,6 +2,7 @@
 *	Sarah Cooley
 *	CS480 - Winter2011
 *	Assignment 1
+*	Original Author: Tim Budd
 */
 
 import java.io.*;

@@ -2,13 +2,10 @@
 *	Sarah Cooley
 *	CS480 - Winter 2011
 *	Assignment1
+*	Starter code by: Tim Budd
 */
 
 import java.io.*;
-
-//
-//--------Lexer----------------
-//
 
 public class Lexer {
 	private PushbackReader input;
