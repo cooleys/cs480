@@ -11,6 +11,14 @@ public class Lexer {
 	private PushbackReader input;
 	private String token;
 	private int tokenType;
+	
+	static final int identifierToken = 1;
+	static final int keywordToken = 2;
+	static final int intToken = 3;
+	static final int realToken = 4;
+	static final int stringToken = 5;
+	static final int otherToken = 6;
+	static final int endOfInput = 7;
 
 	public Lexer(Reader in) {
 		input = new PushbackReader(in);
@@ -28,6 +36,37 @@ public class Lexer {
 			}
 		}
 		
+		//literal strings
+		else if(cc == '"'){
+			while(cc != '"'){
+				tempTok += cc;
+				cc = (char)input.read();
+			}
+		}
+		
+		//comments
+		else if(cc == '{'){
+			while(cc != '}'){
+				tempTok += cc;
+				cc = (char)input.read();
+			}
+		}
+		
+		//ints and floats
+		else if(Character.isDigit(cc)){
+			while(Character.isLetterOrDigit(cc)){
+				tempTok += cc;
+				cc = (char)input.read();
+			}
+		}
+		
+		//other symbols
+		else{
+			
+		}
+		
+		token = tempTok;
+		
 		input.unread(cc);
 	}
 
@@ -38,19 +77,6 @@ public class Lexer {
 			e.printStackTrace();
 		}
 	}
-	
-	private boolean isValid(char c){
-		Character.isLetterOrDigit(c);
-		return true;
-	}
-
-	static final int identifierToken = 1;
-	static final int keywordToken = 2;
-	static final int intToken = 3;
-	static final int realToken = 4;
-	static final int stringToken = 5;
-	static final int otherToken = 6;
-	static final int endOfInput = 7;
 
 	public String tokenText() {
 		return token;
