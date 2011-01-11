@@ -22,62 +22,73 @@ public class Lexer {
 
 	public Lexer(Reader in) {
 		input = new PushbackReader(in);
+		token = "";
+		tokenType = -1;
 	}
 
 	private void skipWhiteSpace() throws ParseException, IOException {
 		char cc = (char)input.read();
-		String tempTok="";
 		
 		//key words and identifiers
 		if(Character.isLetter(cc)){
 			while(Character.isLetterOrDigit(cc)){
-				tempTok += cc;
+				token += cc;
 				cc = (char)input.read();
 			}
+			tokenType = 1;
+			input.unread(cc);
 		}
 		
 		//literal strings
 		else if(cc == '"'){
+			cc = (char)input.read();
 			while(cc != '"'){
-				tempTok += cc;
+				token += cc;
 				cc = (char)input.read();
 			}
+			tokenType = 5;
 		}
 		
 		//comments
 		else if(cc == '{'){
 			while(cc != '}'){
-				tempTok += cc;
+				token += cc;
 				cc = (char)input.read();
 			}
+			nextLex();
 		}
 		
 		//ints and floats
 		else if(Character.isDigit(cc)){
-			while(Character.isLetterOrDigit(cc)){
-				tempTok += cc;
+			while(Character.isDigit(cc)){
+				token += cc;
 				cc = (char)input.read();
 			}
+			tokenType = 4;
+			input.unread(cc);
 		}
 		
 		//end of input
-		else if(cc == -1){
-			tempTok = "-1";
+		else if(!Character.isDefined(cc)){
+			token = "-1";
 			tokenType = 7;
+		}
+		
+		//end of input
+		else if(cc == ' ' || cc == '\n' || cc == '\t'){
+			nextLex();
 		}
 		
 		//other symbols
 		else{
-			tempTok = "-1";
-			tokenType = 7;
-		}
-		
-		token = tempTok;
-		
-		input.unread(cc);
+			token = "" + cc;
+			tokenType = 6;
+		}		
 	}
 
 	public void nextLex() throws ParseException {
+		token = "";
+		tokenType = -1;
 		try {
 			skipWhiteSpace();
 		} catch (IOException e) {
@@ -99,5 +110,5 @@ public class Lexer {
 
 	public boolean match (String test) {
 		return test.equals(token);
-		}
+	}
 }
