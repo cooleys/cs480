@@ -6,6 +6,7 @@
 */
 
 import java.io.*;
+import java.util.regex.Pattern;
 
 public class Lexer {
 	private PushbackReader input;
@@ -19,6 +20,11 @@ public class Lexer {
 	static final int stringToken = 5;
 	static final int otherToken = 6;
 	static final int endOfInput = 7;
+	
+	static final String[] keywords = {"const", "type", "var", "class", "begin", 
+		"end", "function", "return", "if", "then", "while", "do", "not", "new"};
+	
+	static final Pattern[] numbers = {Pattern.compile("[0-9]*"), Pattern.compile("[0-9]*")};
 
 	public Lexer(Reader in) {
 		input = new PushbackReader(in);
@@ -79,7 +85,7 @@ public class Lexer {
 		}
 		
 		//end of input
-		else if(cc == ' ' || cc == '\n' || cc == '\t'){
+		else if(Character.isWhitespace(cc)){
 			nextLex();
 		}
 		
