@@ -17,11 +17,31 @@ public class Lexer {
 	}
 
 	private void skipWhiteSpace() throws ParseException, IOException {
-		// your code here
+		char cc = (char)input.read();
+		String tempTok="";
+		
+		//key words and identifiers
+		if(Character.isLetter(cc)){
+			while(Character.isLetterOrDigit(cc)){
+				tempTok += cc;
+				cc = (char)input.read();
+			}
+		}
+		
+		input.unread(cc);
 	}
 
 	public void nextLex() throws ParseException {
-		// your code here
+		try {
+			skipWhiteSpace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private boolean isValid(char c){
+		Character.isLetterOrDigit(c);
+		return true;
 	}
 
 	static final int identifierToken = 1;
