@@ -43,6 +43,8 @@ public class Lexer {
 		else if(cc == '"'){
 			cc = (char)input.read();
 			while(cc != '"'){
+				if(!Character.isDefined(cc))
+					throw new ParseException(2);
 				token += cc;
 				cc = (char)input.read();
 			}
@@ -52,6 +54,8 @@ public class Lexer {
 		//comments
 		else if(cc == '{'){
 			while(cc != '}'){
+				if(!Character.isDefined(cc))
+					throw new ParseException(1);
 				token += cc;
 				cc = (char)input.read();
 			}
@@ -92,7 +96,7 @@ public class Lexer {
 		try {
 			skipWhiteSpace();
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new ParseException(0);
 		}
 	}
 
