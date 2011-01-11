@@ -60,9 +60,16 @@ public class Lexer {
 			}
 		}
 		
+		//end of input
+		else if(cc == -1){
+			tempTok = "-1";
+			tokenType = 7;
+		}
+		
 		//other symbols
 		else{
-			
+			tempTok = "-1";
+			tokenType = 7;
 		}
 		
 		token = tempTok;
