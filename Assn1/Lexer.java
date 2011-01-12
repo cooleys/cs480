@@ -40,6 +40,11 @@ public class Lexer {
 			words(cc);
 		}
 		
+		//ints and floats
+		else if(Character.isDigit(cc)){
+			num(cc);
+		}
+		
 		//literal strings
 		else if(cc == '"'){
 			cc = (char)input.read();
@@ -63,11 +68,6 @@ public class Lexer {
 			nextLex();
 		}
 		
-		//ints and floats
-		else if(Character.isDigit(cc)){
-			num(cc);
-		}
-		
 		//end of input
 		else if(!Character.isDefined(cc)){
 			token = "-1";
@@ -81,30 +81,7 @@ public class Lexer {
 		
 		//other symbols
 		else{
-			token = "" + cc;
-			if(cc == '<'){
-				cc = (char)input.read();
-				if(cc == '=' || cc == '<')
-					token += cc;
-				else
-					input.unread(cc);
-			}
-			else if(cc == '>'){
-				cc = (char)input.read();
-				if(cc == '=' || cc == '>')
-					token += cc;
-				else
-					input.unread(cc);
-			}
-			else if(cc == '=' || (cc == '!')){
-				cc = (char)input.read();
-				if(cc == '=')
-					token += cc;
-				else
-					input.unread(cc);
-			}
-				
-			tokenType = 6;
+			symbols(cc);
 		}		
 	}
 	
@@ -126,10 +103,41 @@ public class Lexer {
 		do{
 			token += cc;
 			cc = (char)input.read();
-		}while(Character.isDigit(cc) || cc == '.');
+		}while(Character.isDigit(cc) || (cc == '.' && token.indexOf('.') == -1));
 		
-		tokenType = 4;
+		if(token.indexOf('.') == -1)
+			tokenType = 3;
+		else
+			tokenType = 4;
+		
 		input.unread(cc);
+	}
+	
+	private void symbols(char cc) throws IOException{
+		token = "" + cc;
+		if(cc == '<'){
+			cc = (char)input.read();
+			if(cc == '=' || cc == '<')
+				token += cc;
+			else
+				input.unread(cc);
+		}
+		else if(cc == '>'){
+			cc = (char)input.read();
+			if(cc == '=' || cc == '>')
+				token += cc;
+			else
+				input.unread(cc);
+		}
+		else if(cc == '=' || (cc == '!')){
+			cc = (char)input.read();
+			if(cc == '=')
+				token += cc;
+			else
+				input.unread(cc);
+		}
+			
+		tokenType = 6;
 	}
 
 	public void nextLex() throws ParseException {
