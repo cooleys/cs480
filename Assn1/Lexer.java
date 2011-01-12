@@ -24,26 +24,30 @@ public class Lexer {
 	static final String[] keywords = {"const", "type", "var", "class", "begin", 
 		"end", "function", "return", "if", "then", "while", "do", "not", "new"};
 	
-	static final Pattern[] numbers = {Pattern.compile("[0-9]*"), Pattern.compile("[0-9]+.[0-9]*")};
-
 	public Lexer(Reader in) {
 		input = new PushbackReader(in);
-		token = "";
-		tokenType = -1;
 	}
 
 	private void skipWhiteSpace() throws ParseException, IOException {
 		char cc = (char)input.read();
 		
 		//key words and identifiers
-		if(Character.isLetter(cc)){
+		if(Character.isLetter(cc))
 			words(cc);
-		}
 		
 		//ints and floats
-		else if(Character.isDigit(cc)){
+		else if(Character.isDigit(cc))
 			num(cc);
+
+		//end of input
+		else if(!Character.isDefined(cc)){
+			token = "-1";
+			tokenType = 7;
 		}
+		
+		//end of input
+		else if(Character.isWhitespace(cc))
+			nextLex();
 		
 		//literal strings
 		else if(cc == '"'){
@@ -59,30 +63,17 @@ public class Lexer {
 		
 		//comments
 		else if(cc == '{'){
-			while(cc != '}'){
-				if(!Character.isDefined(cc))
-					throw new ParseException(1);
-				token += cc;
+			do{
 				cc = (char)input.read();
-			}
-			nextLex();
-		}
-		
-		//end of input
-		else if(!Character.isDefined(cc)){
-			token = "-1";
-			tokenType = 7;
-		}
-		
-		//end of input
-		else if(Character.isWhitespace(cc)){
+				if(!Character.isDefined(cc) || cc == '{')
+					throw new ParseException(1);
+			}while(cc != '}');
 			nextLex();
 		}
 		
 		//other symbols
-		else{
+		else
 			symbols(cc);
-		}		
 	}
 	
 	private void words(char cc) throws IOException{
