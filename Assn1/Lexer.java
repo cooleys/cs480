@@ -24,7 +24,7 @@ public class Lexer {
 	static final String[] keywords = {"const", "type", "var", "class", "begin", 
 		"end", "function", "return", "if", "then", "while", "do", "not", "new"};
 	
-	static final Pattern[] numbers = {Pattern.compile("[0-9]*"), Pattern.compile("[0-9]*")};
+	static final Pattern[] numbers = {Pattern.compile("[0-9]*"), Pattern.compile("[0-9]+.[0-9]*")};
 
 	public Lexer(Reader in) {
 		input = new PushbackReader(in);
@@ -37,12 +37,7 @@ public class Lexer {
 		
 		//key words and identifiers
 		if(Character.isLetter(cc)){
-			while(Character.isLetterOrDigit(cc)){
-				token += cc;
-				cc = (char)input.read();
-			}
-			tokenType = 1;
-			input.unread(cc);
+			words(cc);
 		}
 		
 		//literal strings
@@ -70,12 +65,7 @@ public class Lexer {
 		
 		//ints and floats
 		else if(Character.isDigit(cc)){
-			while(Character.isDigit(cc)){
-				token += cc;
-				cc = (char)input.read();
-			}
-			tokenType = 4;
-			input.unread(cc);
+			num(cc);
 		}
 		
 		//end of input
@@ -92,8 +82,54 @@ public class Lexer {
 		//other symbols
 		else{
 			token = "" + cc;
+			if(cc == '<'){
+				cc = (char)input.read();
+				if(cc == '=' || cc == '<')
+					token += cc;
+				else
+					input.unread(cc);
+			}
+			else if(cc == '>'){
+				cc = (char)input.read();
+				if(cc == '=' || cc == '>')
+					token += cc;
+				else
+					input.unread(cc);
+			}
+			else if(cc == '=' || (cc == '!')){
+				cc = (char)input.read();
+				if(cc == '=')
+					token += cc;
+				else
+					input.unread(cc);
+			}
+				
 			tokenType = 6;
 		}		
+	}
+	
+	private void words(char cc) throws IOException{
+		do{
+			token += cc;
+			cc = (char)input.read();
+		}while(Character.isLetterOrDigit(cc));
+		
+		tokenType = 1;
+		input.unread(cc);
+		
+		for(String t: keywords)
+			if(t.equals(token))
+				tokenType=2;
+	}
+	
+	private void num(char cc) throws IOException{
+		do{
+			token += cc;
+			cc = (char)input.read();
+		}while(Character.isDigit(cc) || cc == '.');
+		
+		tokenType = 4;
+		input.unread(cc);
 	}
 
 	public void nextLex() throws ParseException {
