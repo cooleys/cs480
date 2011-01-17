@@ -154,6 +154,11 @@ public class Lexer {
 	}
 
 	public boolean match (String test) {
-		return test.equals(token);
+		return(test.equals(token) && tokenType!=5);
+	}
+
+	public boolean argumentList() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
