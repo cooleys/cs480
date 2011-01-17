@@ -1,7 +1,7 @@
 /*
 *	Sarah Cooley
 *	CS480 - Winter2011
-*	Assignment 1
+*	Assignment 2
 *	Original Author: Tim Budd
 */
 
@@ -12,19 +12,14 @@ class Assn2 {
 		System.out.println("Reading file " + args[0]);
 		try {
 			FileReader instream = new FileReader(args[0]);
-			Lexer lex = new Lexer(instream);
-			lex.nextLex();
-			while (lex.tokenCategory() != lex.endOfInput) {
-				System.out.println("Token: " + lex.tokenText() +
-					" category " + lex.tokenCategory());
-				lex.nextLex();
-				}
+			Parser par = new Parser(new Lexer(instream), true);
+			par.parse();
 		}
-		catch (ParseException e)
-			{ System.out.println(e.toString()); }
-		catch(FileNotFoundException e)
-			{ System.out.println("File not found " + e); }
-		catch(IOException e)
-			{ System.out.println("File IO Exception " + e);}
-	}
+			catch(ParseException e) 
+				{ System.out.println("Parse Error " + e); }
+			catch(FileNotFoundException e) 
+				{ System.err.println("File not found " + e); }
+			catch(IOException e) 
+				{ System.err.println("File IO Exception " + e); }
+		}
 }
