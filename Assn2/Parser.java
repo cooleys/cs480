@@ -117,15 +117,12 @@ public class Parser {
 		if(!lex.isIdentifier())
 			throw new ParseException();
 
-		lex.nextLex();
+		lex.nextLex();		
 		if(!lex.match(":"))
 			throw new ParseException(19);
 	
 		lex.nextLex();
-		if(lex.match("type"))
-			type();
-		else
-			throw new ParseException(19);
+		type();
 		
 		stop("nameDeclaration");
 	}
@@ -251,7 +248,8 @@ public class Parser {
 		}
 		else if(!lex.isIdentifier())
 			throw new ParseException();
-			
+		
+		lex.nextLex();
 		stop("type");
 	}
 	

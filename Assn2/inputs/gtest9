@@ -1,8 +1,0 @@
-{ this is all nonsense, but we don't have a symbol table}
-{ so we can't tell the difference }
-function main ()
-begin
-	if ((a == 12) and (b <= 12) or not (c >= 12))  
-		x = a(2*a << 3+-5);
-end;
-

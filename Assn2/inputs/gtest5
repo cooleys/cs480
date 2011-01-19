@@ -1,5 +1,0 @@
-function main (a int)
-begin
-	printString("too bad");
-end;
-

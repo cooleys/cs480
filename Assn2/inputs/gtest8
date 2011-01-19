@@ -1,4 +1,0 @@
-function main ()
-begin
-	a = b.c^[-3];
-end;

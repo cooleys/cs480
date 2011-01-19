@@ -1,5 +1,0 @@
-function (a : int) 
-begin
-	return (8);
-end;
-

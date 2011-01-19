@@ -1,4 +1,0 @@
-function main ()
-begin
-	if (a < b < c) printString("too bad");
-end;

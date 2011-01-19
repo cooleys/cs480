@@ -1,7 +1,0 @@
-{ test old style if statements }
-
-function main ()
-begin
-	if (3 == 4) then printString("opps");
-end;
-
