@@ -45,83 +45,213 @@ public class Parser {
 
 	private void declaration() throws ParseException {
 		start("declaration");
-		if(classDeclairation());
-		else if(nonClassDeclairation());
+		if(lex.match("class"))
+			classDeclaration();
+		else if(lex.match("function") || lex.match("var") || lex.match("const")
+				|| lex.match("type"))
+			 nonClassDeclaration();
+		else
+			throw new ParseException(26);
+		
+		stop("declaration");
 	}
 	
-	private boolean nonClassDeclairation() throws ParseException {
-		if(!functionDeclairation() && !nonFunctionDeclairation())
-			return false;
-		start("nonClassDeclairation");
-		return true;
+	private void nonClassDeclaration() throws ParseException {
+		start("nonClassDeclaration");
+		if(lex.match("function"))
+			functionDeclaration();
+		if(lex.match("var") || lex.match("const") || lex.match("type"))
+			nonFunctionDeclaration();
+		stop("nonClassDeclaration");
 	}
 	
-	private boolean nonFunctionDeclairation() throws ParseException {
-		if(!(varDeclairation() || constDeclairation() || typeDeclairation()))
-			return false;
-		start("nonFunctionDeclairation");
-		return true;
+	private void nonFunctionDeclaration() throws ParseException {
+		start("nonFunctionDeclaration");
+		if(lex.match("var"))
+			varDeclaration();
+		else if(lex.match("const"))
+			constDeclaration();
+		else if(lex.match("type"))
+			typeDeclaration();
+		else
+			throw new ParseException();
+		
+		stop("nonFunctionDeclaration");
 	}
 	
-	private boolean varDeclairation() throws ParseException {
-		if(!lex.match("var"))
-			return false;
-		start("varDeclairation");
+	private void varDeclaration() throws ParseException {
+		start("varDeclaration");
 		
 		lex.nextLex();
 		if(lex.tokenCategory() != 1)
 			throw new ParseException(27);
 		
-		return true;
+		stop("varDeclaration");
 	}
 	
-	private boolean constDeclairation() throws ParseException {
-		if(!lex.match("const"))
-			return false;
-		start("constDeclairation");
+	private void constDeclaration() throws ParseException {
+		start("constDeclaration");
 
 		lex.nextLex();
 		if(lex.tokenCategory() != 1)
 			throw new ParseException(27);
 		
-		return true;
+		stop("constDeclaration");
 	}
 	
-	private boolean typeDeclairation() throws ParseException {
-		if(!lex.match("type"))
-			return false;
-		start("typeDeclairation");
+	private void typeDeclaration() throws ParseException {
+		start("typeDeclaration");
 
 		lex.nextLex();
 		if(lex.tokenCategory() != 1)
 			throw new ParseException(27);
 		
-		return true;
+		stop("typeDeclaration");
 	}
 	
-	private boolean classDeclairation() throws ParseException {		
+	private void nameDeclaration() throws ParseException {
+		start("nameDeclaration");
+		if(!lex.isIdentifier())
+			throw new ParseException();
+
+		lex.nextLex();
+		if(!lex.match(":"))
+			throw new ParseException(19);
+	
+		lex.nextLex();
+		if(lex.match("type"))
+			type();
+		else
+			throw new ParseException(19);
+		
+		stop("nameDeclaration");
+	}
+	
+	private void classDeclaration() throws ParseException {		
+		start("classDeclaration");
 		if(!lex.match("class"))
-			return false;
-		start("classDeclairation");
-
-		if(lex.tokenCategory() != 1)
 			throw new ParseException();
 		
 		lex.nextLex();
-		if(!classBody())
+		if(!lex.isIdentifier())
 			throw new ParseException();
 		
-		return true;
+		lex.nextLex();
+		classBody();
+		
+		stop("classDeclaration");
 	}
 	
-	private boolean classBody() throws ParseException {
-		if(!lex.match("begin"))
-			return false;
+	private void classBody() throws ParseException {
 		start("classBody");
-
+		if(!lex.match("begin"))
+			throw new ParseException();
+		
 		lex.nextLex();
 		while (lex.tokenCategory() != Lexer.endOfInput && !lex.match("end")) {
-			if(!nonClassDeclairation());
+			nonClassDeclaration();
+			if (lex.match(";"))
+				lex.nextLex();
+			else
+				throw new ParseException(18);
+		}
+		
+		if(!lex.match("end"))
+			throw new ParseException();
+	}
+	
+	private void functionDeclaration() throws ParseException {
+		start("functionDeclaration");
+		if(!lex.match("function"))
+			throw new ParseException();
+		
+		lex.nextLex();
+		if(lex.tokenCategory() != 1)
+			throw new ParseException();
+		
+		lex.nextLex();
+		arguments();
+		
+		returnType();
+		
+		functionBody();
+		
+		stop("functionDeclaration");
+	}
+	
+	private void arguments() throws ParseException {		
+		start("arguments");
+		if(!lex.match("("))
+			throw new ParseException();
+
+		lex.nextLex();
+		argumentList();
+			
+		if(lex.tokenCategory() != 6 && !lex.match(")"))
+			throw new ParseException();
+		
+		lex.nextLex();
+		stop("arguments");
+	}
+	
+	private void argumentList() throws ParseException {		
+		start("argumentList");
+		
+		while (lex.isIdentifier()) {
+			nameDeclaration();
+			if (lex.match(","))
+				lex.nextLex();
+			else
+				throw new ParseException(18);
+		}
+		
+		stop("argumentList");
+	}
+	
+	private void returnType() throws ParseException {		
+		start("returnType");
+		
+		if(lex.match(":")){
+			lex.nextLex();
+			type();
+		}
+		
+		stop("returnType");
+	}
+	
+	private void type() throws ParseException {		
+		start("type");
+		if(!lex.match("class"))
+
+		lex.nextLex();
+		if(lex.tokenCategory() != 1)
+			throw new ParseException();	
+	}
+	
+	private void functionBody() throws ParseException {		
+		start("functionBody");
+
+		while (lex.match("function") || lex.match("var") || lex.match("const")
+				|| lex.match("type")) {
+			nonClassDeclaration();
+			if (lex.match(";"))
+				lex.nextLex();
+			else
+				throw new ParseException(18);
+		}
+		
+		compoundStatement();
+	}
+	
+	private void compoundStatement() throws ParseException {		
+		start("Compound Statement");
+		if(!lex.match("begin"))
+			throw new ParseException();
+		
+		lex.nextLex();
+		while (lex.match("begin") || lex.match("if") || lex.match("while") ||
+				lex.match("return") || lex.isIdentifier()) {
+			statement();
 			if (lex.match(";"))
 				lex.nextLex();
 			else
@@ -131,92 +261,95 @@ public class Parser {
 		if(!lex.match("end"))
 			throw new ParseException();
 		
-		return true;
+		stop("compoundStatement");
 	}
 	
-	private boolean functionDeclairation() throws ParseException {
-		if(!lex.match("function"))
-			return false;
-		start("functionDeclairation");
-
-		lex.nextLex();
-		if(lex.tokenCategory() != 1)
+	private void statement() throws ParseException {		
+		start("statement");
+		if(lex.match("begin"))
+			compoundStatement();
+		else if(lex.match("if"))
+			ifStatement();
+		else if(lex.match("while"))
+			whileStatement();
+		else if(lex.match("return"))
+			returnStatement();
+		else if(lex.isIdentifier())
+			assignOrFunction();
+		else
 			throw new ParseException();
 		
 		lex.nextLex();
-		if(!arguments())
-			throw new ParseException();
-		
-		lex.nextLex();
-		if(!returnType())
-			throw new ParseException();
-		
-		lex.nextLex();
-		if(!functionBody())
-			throw new ParseException();
-		
-		return true;
+		stop("statement");
 	}
 	
-	private boolean arguments() throws ParseException {		
-		if(lex.tokenCategory() != 6 && !lex.match("("))
-			return false;
-		start("arguments");
-
-		lex.nextLex();
-		if(argumentList())
+	private void returnStatement() throws ParseException {		
+		start("returnStatement");
+		if(!lex.match("return"))
 			throw new ParseException();
 		
 		lex.nextLex();
-		if(lex.tokenCategory() != 6 && !lex.match("("))
-			throw new ParseException();
+		if(lex.match("("));
+			//expression();
 		
-		stop("arguments");
-		return true;
+		stop("returnStatement");
 	}
 	
-	private boolean argumentList() throws ParseException {		
-		start("argumentList");
-
-		while (lex.tokenCategory() != Lexer.endOfInput) {
-			if (lex.match(","))
-				lex.nextLex();
-			else
-				throw new ParseException(18);
-			nameDeclairation();
-		}        
-		stop("program");
+	private void ifStatement() throws ParseException {		
+		start("ifStatement");
+		if(!lex.match("if"))
+			throw new ParseException();
+		
+		lex.nextLex();
+		//expression();
+		
+		lex.nextLex();
+		if(!lex.match("then"))
+			throw new ParseException();
+		
+		lex.nextLex();
+		statement();
+		
+		lex.nextLex();
+		if(lex.match("else")){
+			lex.nextLex();
+			statement();
+		}
+		
+		stop("ifStatement");
 	}
 	
-	private boolean returnType() throws ParseException {		
-		if(!lex.match("class"))
-			return false;
-		start("returnType");
-
-		lex.nextLex();
-		if(lex.tokenCategory() != 1)
+	private void whileStatement() throws ParseException {		
+		start("whileStatement");
+		if(!lex.match("while"))
 			throw new ParseException();
 		
 		lex.nextLex();
-		if(!classBody())
+		//expression();
+		
+		lex.nextLex();
+		if(!lex.match("do"))
 			throw new ParseException();
 		
-		return true;
+		lex.nextLex();
+		statement();
+		
+		stop("whileStatement");
 	}
 	
-	private boolean functionBody() throws ParseException {		
-		if(!lex.match("class"))
-			return false;
-		start("functionBody");
-
-		lex.nextLex();
-		if(lex.tokenCategory() != 1)
+	private void assignOrFunction() throws ParseException {		
+		start("assignOrFunction");
+		if(!lex.isIdentifier())
 			throw new ParseException();
 		
 		lex.nextLex();
-		if(!classBody())
-			throw new ParseException();
+		if(lex.match("="));
+			//expression();
+		else if(lex.match("("));
+			//parameterList();
 		
-		return true;
+		statement();
+		
+		stop("assignOrFunction");
 	}
 }
