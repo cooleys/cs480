@@ -146,6 +146,7 @@ public class Parser {
 			throw new ParseException();
 		
 		lex.nextLex();
+		
 		classBody();
 		
 		stop("classDeclaration");
@@ -167,6 +168,9 @@ public class Parser {
 		
 		if(!lex.match("end"))
 			throw new ParseException();
+		lex.nextLex();
+		
+		stop("classBody");
 	}
 	
 	private void functionDeclaration() throws ParseException {
@@ -504,32 +508,27 @@ public class Parser {
 	private void reference() throws ParseException {		
 		start("reference");
 		
-		if(lex.isIdentifier()){
-			lex.nextLex();
-		}
-			
-		if(lex.tokenCategory() == Lexer.otherToken){
-			if(lex.match(".")){
+		if(!lex.isIdentifier())
+			throw new ParseException(27);
+		lex.nextLex();
+		
+		while( lex.match("^") || lex.match(".") || lex.match("[") ) {
+			if ( lex.match(".") ) {
 				lex.nextLex();
-				if(!lex.isIdentifier())
-					throw new ParseException();
+				if( !lex.isIdentifier() ) {
+					throw new ParseException(27);
+				}
 			}
-			else if(lex.match("^")){
-				lex.nextLex();
-			}
-			else if(lex.match("[")){
+			else if (lex.match("[") ) {
 				lex.nextLex();
 				expression();
-				if(!lex.match("]"))
+				if( !lex.match("]") ) {
 					throw new ParseException();
+				}
 			}
-			else
-				throw new ParseException();
+			lex.nextLex();
 		}
-		else if(lex.tokenCategory() == Lexer.endOfInput || lex.tokenCategory() == Lexer.keywordToken)
-			throw new ParseException();
 		
-		lex.nextLex();
 		stop("reference");
 	}
 }
