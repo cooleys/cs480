@@ -258,8 +258,9 @@ public class Parser {
 		}
 		else if(!lex.isIdentifier())
 			throw new ParseException();
+		else
+			lex.nextLex();
 		
-		lex.nextLex();
 		stop("type");
 	}
 	
@@ -503,6 +504,10 @@ public class Parser {
 	private void reference() throws ParseException {		
 		start("reference");
 		
+		if(lex.isIdentifier()){
+			lex.nextLex();
+		}
+			
 		if(lex.tokenCategory() == Lexer.otherToken){
 			if(lex.match(".")){
 				lex.nextLex();
@@ -513,6 +518,7 @@ public class Parser {
 				lex.nextLex();
 			}
 			else if(lex.match("[")){
+				lex.nextLex();
 				expression();
 				if(!lex.match("]"))
 					throw new ParseException();
