@@ -1,5 +1,5 @@
 function main ()
 begin
-	if (a == b) c = d;
+	if a == b then c = d;
 end;
 

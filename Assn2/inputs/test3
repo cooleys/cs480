@@ -6,12 +6,12 @@ begin
 	printStr("starting");
 	low = 0;
 	high = r;
-	while (high != low) 
+	while high != low do
 	begin
 		printStr("values");
 		mid = (low + high) / 2;
 		printInt(mid);
-		if ((mid * mid) > r) 
+		if (mid * mid) > r then
 			high = mid
 		else
 			low = mid;

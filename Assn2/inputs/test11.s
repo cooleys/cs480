@@ -71,6 +71,11 @@ recognized assignOrFunction token: ;
 recognized statement token: ;
 start statement token: if
 start ifStatement token: if
+start expression token: (
+start relExpression token: (
+start plusExpression token: (
+start timesExpression token: (
+start term token: (
 start expression token: c
 start relExpression token: c
 start plusExpression token: c
@@ -89,6 +94,11 @@ recognized timesExpression token: )
 recognized plusExpression token: )
 recognized relExpression token: )
 recognized expression token: )
+recognized term token: then
+recognized timesExpression token: then
+recognized plusExpression token: then
+recognized relExpression token: then
+recognized expression token: then
 start statement token: c
 start assignOrFunction token: c
 start reference token: c

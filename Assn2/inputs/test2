@@ -1,7 +1,7 @@
 function gcd (a : int, b : int) : int
 begin
-	while (a != b) 
-		if (a > b) 
+	while a != b do
+		if a > b  then
 			a = a - b
 		else
 			b = b - a;

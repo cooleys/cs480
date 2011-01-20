@@ -201,6 +201,7 @@ public class Parser {
 			nameDeclaration();
 			if (lex.match(","))
 				lex.nextLex();
+			else if(lex.match(")"));
 			else
 				throw new ParseException(18);
 		}
@@ -329,7 +330,7 @@ public class Parser {
 		lex.nextLex();
 		expression();
 		
-		lex.nextLex();
+		System.out.print(lex.tokenText());
 		if(!lex.match("then"))
 			throw new ParseException();
 		
@@ -351,10 +352,13 @@ public class Parser {
 			throw new ParseException();
 		
 		lex.nextLex();
-		expression();
+		if(!lex.match("("))
+			throw new ParseException();
 		
 		lex.nextLex();
-		if(!lex.match("do"))
+		expression();
+		
+		if(!lex.match(")"))
 			throw new ParseException();
 		
 		lex.nextLex();
@@ -476,8 +480,12 @@ public class Parser {
 		else if(lex.isIdentifier()){
 			reference();
 		}
+		else if(lex.tokenCategory() == Lexer.intToken ||
+				lex.tokenCategory() == Lexer.realToken ||
+				lex.tokenCategory() == Lexer.stringToken){
+			lex.nextLex();
+		}
 		
-		lex.nextLex();
 		stop("term");
 	}
 	
