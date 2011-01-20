@@ -461,9 +461,9 @@ public class Parser {
 		if(lex.match("(")){
 			lex.nextLex();
 			expression();
-			
 			if(!lex.match(")"))
-				throw new ParseException();			
+				throw new ParseException();	
+			lex.nextLex();
 		}
 		else if(lex.match("not")){
 			lex.nextLex();
