@@ -80,25 +80,34 @@ public class Parser {
 	}
 	
 	private void varDeclaration() throws ParseException {
-		start("varDeclaration");
+		start("variableDeclaration");
 		
 		lex.nextLex();
 		if(lex.tokenCategory() != 1)
 			throw new ParseException(27);
+		nameDeclaration();
 		
-		lex.nextLex();
-		stop("varDeclaration");
+		stop("variableDeclaration");
 	}
 	
 	private void constDeclaration() throws ParseException {
-		start("constDeclaration");
+		start("constantDeclaration");
 
 		lex.nextLex();
-		if(lex.tokenCategory() != 1)
+		if(lex.isIdentifier())
 			throw new ParseException(27);
 		
 		lex.nextLex();
-		stop("constDeclaration");
+		if(lex.match("="))
+			throw new ParseException(27);
+		
+		lex.nextLex();
+		if(lex.tokenCategory() != Lexer.intToken ||
+				lex.tokenCategory() != Lexer.realToken ||
+				lex.tokenCategory() != Lexer.stringToken)
+			throw new ParseException(27);
+		
+		stop("constantDeclaration");
 	}
 	
 	private void typeDeclaration() throws ParseException {
@@ -107,8 +116,8 @@ public class Parser {
 		lex.nextLex();
 		if(lex.tokenCategory() != 1)
 			throw new ParseException(27);
+		nameDeclaration();
 		
-		lex.nextLex();
 		stop("typeDeclaration");
 	}
 	
@@ -316,8 +325,13 @@ public class Parser {
 			throw new ParseException();
 		
 		lex.nextLex();
-		if(lex.match("("));
-			//expression();
+		if(lex.match("(")){
+			lex.nextLex();
+			expression();
+			if(!lex.match(")"))
+				throw new ParseException();
+			lex.nextLex();
+		}
 		
 		stop("returnStatement");
 	}
@@ -330,14 +344,12 @@ public class Parser {
 		lex.nextLex();
 		expression();
 		
-		System.out.print(lex.tokenText());
 		if(!lex.match("then"))
 			throw new ParseException();
 		
 		lex.nextLex();
 		statement();
 		
-		lex.nextLex();
 		if(lex.match("else")){
 			lex.nextLex();
 			statement();
@@ -352,13 +364,9 @@ public class Parser {
 			throw new ParseException();
 		
 		lex.nextLex();
-		if(!lex.match("("))
-			throw new ParseException();
-		
-		lex.nextLex();
 		expression();
 		
-		if(!lex.match(")"))
+		if(!lex.match("do"))
 			throw new ParseException();
 		
 		lex.nextLex();
@@ -378,9 +386,8 @@ public class Parser {
 		else if(lex.match("(")){
 			lex.nextLex();
 			parameterList();
+			lex.nextLex();
 		}
-		
-		lex.nextLex();
 		
 		stop("assignOrFunction");
 	}
@@ -455,11 +462,8 @@ public class Parser {
 			lex.nextLex();
 			expression();
 			
-			lex.nextLex();
-			if(lex.match(")"))
-				throw new ParseException();
-			
-			lex.nextLex();
+			if(!lex.match(")"))
+				throw new ParseException();			
 		}
 		else if(lex.match("not")){
 			lex.nextLex();
@@ -479,6 +483,13 @@ public class Parser {
 		}
 		else if(lex.isIdentifier()){
 			reference();
+			if(lex.match("(")){
+				lex.nextLex();
+				parameterList();
+				if(!lex.match(")"))
+					throw new ParseException();
+				lex.nextLex();
+			}
 		}
 		else if(lex.tokenCategory() == Lexer.intToken ||
 				lex.tokenCategory() == Lexer.realToken ||
