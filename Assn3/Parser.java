@@ -199,6 +199,8 @@ public class Parser {
 		if (! lex.isIdentifier())
 			parseError(27);
 		String fid = lex.tokenText();
+		if(sym.nameDefined(fid))
+			throw new ParseException(35, lex.tokenText());
 		lex.nextLex();
 		symf.doingArguments = true;
 		arguments(symf);
