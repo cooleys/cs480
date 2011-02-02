@@ -81,6 +81,8 @@ class GlobalSymbolTable implements SymbolTable {
 
 class FunctionSymbolTable implements SymbolTable {
 	SymbolTable surrounding = null;
+	int fp = 0, params = 0, locals=0;
+	public boolean doingArguments = true;
 
 	FunctionSymbolTable (SymbolTable st) { surrounding = st; }
 
@@ -92,16 +94,11 @@ class FunctionSymbolTable implements SymbolTable {
 
 	public void enterVariable (String name, Type type)
 	{
-		// this is for you to figure out.
-		// I'll leave a stub, which you should
-		// replace with the real thing
 		enterSymbol(new OffsetSymbol(name, new AddressType(type), 27));
 	}
 
 	public void enterFunction (String name, FunctionType ft) 
 		{ enterSymbol (new GlobalSymbol(name, ft, name)); }
-
-	public boolean doingArguments = true;
 
 	private void enterSymbol (Symbol s) {
 		table.put(s.name, s);
@@ -148,7 +145,6 @@ class FunctionSymbolTable implements SymbolTable {
 		return null; // should never happen
 	}
 
-	@Override
 	public int size() {
 		return table.size();
 	}
@@ -220,7 +216,6 @@ class ClassSymbolTable implements SymbolTable {
 		return null; // should never happen
 	}
 
-	@Override
 	public int size() {
 		return table.size();
 	}
