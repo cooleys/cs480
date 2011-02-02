@@ -148,7 +148,7 @@ class FunctionSymbolTable implements SymbolTable {
 	}
 
 	public int size() {
-		return (params - locals);
+		return (locals);
 	}
 }
 

@@ -192,21 +192,23 @@ public class Parser {
 
 	private void functionDeclaration(SymbolTable sym) throws ParseException {
 		start("functionDeclaration");
-		if (! lex.match("function"))
+		if (!lex.match("function"))
 			parseError(10);
 		lex.nextLex();
 		FunctionSymbolTable symf = new FunctionSymbolTable(sym);
-		if (! lex.isIdentifier())
+		
+		if (!lex.isIdentifier())
 			parseError(27);
 		String fid = lex.tokenText();
 		if(sym.nameDefined(fid))
 			throw new ParseException(35, lex.tokenText());
 		lex.nextLex();
+		
 		symf.doingArguments = true;
 		arguments(symf);
 		symf.doingArguments = false;
 		sym.enterFunction(fid, new FunctionType(returnType(symf)));
-		functionBody(symf);
+		functionBody(symf, fid);
 		stop("functionDeclaration");
 	}
 
@@ -279,7 +281,7 @@ public class Parser {
 		return result;
 	}
 
-	private void functionBody (SymbolTable sym) throws ParseException {
+	private void functionBody (SymbolTable sym, String fid) throws ParseException {
 		start("functionBody");
 		while (! lex.match("begin")) {
 			nonFunctionDeclaration(sym);
@@ -288,7 +290,9 @@ public class Parser {
 			else
 				throw new ParseException(18);
 		}
+		CodeGen.genProlog(fid, sym.size());
 		compoundStatement(sym);
+		CodeGen.genEpilog(fid);
 		stop("functionBody");
 	}
 
