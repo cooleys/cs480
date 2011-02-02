@@ -1,6 +1,9 @@
-//
-//	written (and rewritten) by Tim Budd
-//
+/*
+*	Sarah Cooley
+*	CS480 - Winter2011
+*	Assignment 2
+*	Original Author: Tim Budd
+*/
 
 interface SymbolTable {
 		// methods to enter values into symbol table
