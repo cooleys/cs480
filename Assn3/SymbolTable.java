@@ -1,3 +1,5 @@
+import java.util.HashMap;
+
 /*
 *	Sarah Cooley
 *	CS480 - Winter2011
@@ -6,6 +8,8 @@
 */
 
 interface SymbolTable {
+	public HashMap<String, Symbol> table = new HashMap<String, Symbol>();
+	
 		// methods to enter values into symbol table
 	public void enterConstant (String name, Ast value);
 	public void enterType (String name, Type type);
@@ -33,22 +37,15 @@ class GlobalSymbolTable implements SymbolTable {
 		{ enterSymbol (new GlobalSymbol(name, ft, name)); }
 
 	private void enterSymbol (Symbol s) {
-		// this if for you to figure out.
-		// how should a symbol be stored?
-		// ...
+		table.put(s.name, s);
 	}
 
 	private Symbol findSymbol (String name) {
-		// this is also for you to figure out.
-		// read a symbol.  If not found, return null
-		// ...
-		return null;
+		return table.get(name);
 	}
 
 	public boolean nameDefined (String name) {
-		Symbol s = findSymbol(name);
-		if (s != null) return true;
-		else return false;
+		return table.containsKey(name);
 	}
 
 	public Type lookupType (String name) throws ParseException {
@@ -64,6 +61,7 @@ class GlobalSymbolTable implements SymbolTable {
 		Symbol s = findSymbol(name);
 		if (s == null)
 			throw new ParseException(41, name);
+		
 		// now have a valid symbol
 		if (s instanceof GlobalSymbol) {
 			GlobalSymbol gs = (GlobalSymbol) s;
@@ -77,8 +75,7 @@ class GlobalSymbolTable implements SymbolTable {
 	}
 
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return table.size();
 	}
 }
 
@@ -107,12 +104,11 @@ class FunctionSymbolTable implements SymbolTable {
 	public boolean doingArguments = true;
 
 	private void enterSymbol (Symbol s) {
-		// you can just copy from the first one
+		table.put(s.name, s);
 	}
 
 	private Symbol findSymbol (String name) {
-		// 
-		return null;
+		return table.get(name);
 	}
 
 	public boolean nameDefined (String name) {
@@ -154,8 +150,7 @@ class FunctionSymbolTable implements SymbolTable {
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return table.size();
 	}
 }
 
@@ -182,12 +177,11 @@ class ClassSymbolTable implements SymbolTable {
 		{ enterSymbol (new GlobalSymbol(name, ft, name)); }
 
 	private void enterSymbol (Symbol s) {
-		// ...
+		table.put(s.name, s);
 	}
 
 	private Symbol findSymbol (String name) {
-		// ...
-		return null;
+		return table.get(name);
 	}
 
 	public boolean nameDefined (String name) {
@@ -228,7 +222,6 @@ class ClassSymbolTable implements SymbolTable {
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return table.size();
 	}
 }
