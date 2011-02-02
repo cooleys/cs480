@@ -73,7 +73,6 @@ class GlobalSymbolTable implements SymbolTable {
 		return null; // should never happen
 	}
 
-	@Override
 	public int size() {
 		// TODO Auto-generated method stub
 		return 0;

@@ -3,6 +3,7 @@
 //		errors reported by the parser
 //
 
+@SuppressWarnings("serial")
 class ParseException extends Exception {
 	private static String messages [ ] = {
 		"unexpected IO error",			// 0
@@ -53,7 +54,7 @@ class ParseException extends Exception {
 		"function call on non function",	// 45
 		"value must be numeric",		// 46
 		""
-		};
+	};
 
 	public ParseException (int i) { super(messages[i]); }
 	public ParseException (int i, String name) { super(messages[i] + name); }
