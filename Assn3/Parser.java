@@ -195,12 +195,14 @@ public class Parser {
 		if (! lex.match("function"))
 			parseError(10);
 		lex.nextLex();
-		SymbolTable symf = new FunctionSymbolTable(sym);
+		FunctionSymbolTable symf = new FunctionSymbolTable(sym);
 		if (! lex.isIdentifier())
 			parseError(27);
 		String fid = lex.tokenText();
 		lex.nextLex();
+		symf.doingArguments = true;
 		arguments(symf);
+		symf.doingArguments = false;
 		sym.enterFunction(fid, new FunctionType(returnType(symf)));
 		functionBody(symf);
 		stop("functionDeclaration");
