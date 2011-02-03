@@ -18,6 +18,7 @@ public class Parser {
 		sym.enterFunction("printInt", new FunctionType(PrimitiveType.VoidType));
 		sym.enterFunction("printReal", new FunctionType(PrimitiveType.VoidType));
 		sym.enterFunction("printStr", new FunctionType(PrimitiveType.VoidType));
+		
 		lex.nextLex();
 		program(sym);
 		if (lex.tokenCategory() != Lexer.endOfInput)
@@ -92,15 +93,18 @@ public class Parser {
 		start("constantDeclaration");
 		if (lex.match("const")) {
 			lex.nextLex();
+			
 			if (!lex.isIdentifier())
 				parseError(27);
-			if(sym.nameDefined(lex.tokenText()))
-				throw new ParseException(35, lex.tokenText());
 			String id = lex.tokenText();
+			if(sym.nameDefined(id))
+				throw new ParseException(35, lex.tokenText());
 			lex.nextLex();
+			
 			if (!lex.match("="))
 				parseError(20);
 			lex.nextLex();
+			
 			if (lex.tokenCategory() == Lexer.intToken)
 				sym.enterConstant(id, new IntegerNode(new Integer(lex.tokenText())));
 			else if (lex.tokenCategory() == Lexer.realToken)
@@ -123,14 +127,15 @@ public class Parser {
 			if (!lex.isIdentifier()) 
 				parseError(27);
 			String id = lex.tokenText();
+			if(sym.nameDefined(id) == true)		//
+				throw new ParseException(35,id);
 			lex.nextLex();
+			
 			if (!lex.match(":"))
 				parseError(19);
 			lex.nextLex();
-			Type t = type(sym);
-			if(sym.nameDefined(id))
-				throw new ParseException(35, lex.tokenText());
-			sym.enterType(id, t);
+	
+			sym.enterType(id, type(sym));
 		} else
 			parseError(14); 
 		stop("typeDeclaration");
@@ -155,9 +160,11 @@ public class Parser {
 		if(sym.nameDefined(id))
 			throw new ParseException(35, lex.tokenText());
 		lex.nextLex();
+		
 		if (! lex.match(":"))
 			parseError(19);
 		lex.nextLex();
+		
 		sym.enterVariable(id, type(sym));
 		stop("nameDeclaration");
 	}
@@ -167,11 +174,13 @@ public class Parser {
 		if (! lex.match("class"))
 			parseError(5);
 		lex.nextLex();
+		
 		if (! lex.isIdentifier())
 			parseError(27);
 		ClassSymbolTable symc = new ClassSymbolTable(sym);
 		sym.enterType(lex.tokenText(), new ClassType(symc));
 		lex.nextLex();
+		
 		classBody(symc);
 		stop("classDeclaration");
 	}
@@ -181,8 +190,9 @@ public class Parser {
 		if (! lex.match("begin"))
 			parseError(4);
 		lex.nextLex();
+		
 		while (! lex.match("end")) {
-			nonClassDeclaration(sym);
+			nonFunctionDeclaration(sym);
 			if (lex.match(";"))
 				lex.nextLex();
 			else
@@ -197,15 +207,16 @@ public class Parser {
 		if (!lex.match("function"))
 			parseError(10);
 		lex.nextLex();
-		FunctionSymbolTable symf = new FunctionSymbolTable(sym);
 		
+		FunctionSymbolTable symf = new FunctionSymbolTable(sym);
+
 		if (!lex.isIdentifier())
 			parseError(27);
 		String fid = lex.tokenText();
 		if(sym.nameDefined(fid))
 			throw new ParseException(35, lex.tokenText());
 		lex.nextLex();
-		
+
 		symf.doingArguments = true;
 		arguments(symf);
 		symf.doingArguments = false;
@@ -262,23 +273,29 @@ public class Parser {
 			result = new PointerType(type(sym));
 		} else if(lex.match("[")) {
 			lex.nextLex();
+			
 			if (lex.tokenCategory() != Lexer.intToken)
 				parseError(32);
-			int lower = Integer.parseInt((lex.tokenText()));
+			int lower = Integer.parseInt(lex.tokenText());
 			lex.nextLex();
+			
 			if (! lex.match(":"))
 				parseError(19);
 			lex.nextLex();
+			
 			if (lex.tokenCategory() != Lexer.intToken)
 				parseError(32);
-			int upper = Integer.parseInt((lex.tokenText()));
+			int upper = Integer.parseInt(lex.tokenText());
 			lex.nextLex();
+			
 			if (! lex.match("]"))
 				parseError(24);
 			lex.nextLex();
-			type(sym);
+			
+			result = type(sym);
 			result = new ArrayType(lower, upper, result);
 		} else parseError(30);
+		
 		stop("type");
 		return result;
 	}
@@ -303,6 +320,7 @@ public class Parser {
 		if (! lex.match("begin"))
 			parseError(4);
 		lex.nextLex();
+		
 		while (! lex.match("end")) {
 			statement(sym);
 			if (lex.match(";"))
@@ -363,6 +381,7 @@ public class Parser {
 		if (! lex.match("if"))
 			parseError(11);
 		lex.nextLex();
+		
 		expression(sym);
 		if (! lex.match("then"))
 			throw new ParseException(13);
@@ -381,6 +400,7 @@ public class Parser {
 		if (! lex.match("while"))
 			parseError(16);
 		lex.nextLex();
+		
 		expression(sym);
 		if (! lex.match("do"))
 			throw new ParseException(7);
@@ -394,7 +414,6 @@ public class Parser {
 		start("assignOrFunction");
 		Ast val = reference(sym);
 		val.genCode();
-		reference(sym);
 		if (lex.match("=")) {
 			lex.nextLex();
 			expression(sym);
@@ -433,7 +452,7 @@ public class Parser {
 		stop("expression");
 	}
 
-	private boolean relOp(SymbolTable sym) {
+	private boolean relOp() {
 		if (lex.match("<") || lex.match("<=") ||
 				lex.match("==") || lex.match("!=") ||
 				lex.match(">") || lex.match(">="))
@@ -444,7 +463,7 @@ public class Parser {
 	private void relExpression (SymbolTable sym) throws ParseException {
 		start("relExpression");
 		plusExpression(sym);
-		if (relOp(sym)) {
+		if (relOp()) {
 			lex.nextLex();
 			plusExpression(sym);
 		}
@@ -508,7 +527,6 @@ public class Parser {
 		else if (lex.isIdentifier()) {
 			Ast val = reference(sym);
 			val.genCode();
-			reference(sym);
 			if (lex.match("(")) {
 				lex.nextLex();
 				parameterList(sym);
@@ -528,9 +546,8 @@ public class Parser {
 		
 		if (!lex.isIdentifier())
 			parseError(27);
-		else
-			result = sym.lookupName(new FramePointer(), lex.tokenText());
 		
+		result = sym.lookupName(new FramePointer(), lex.tokenText());
 		lex.nextLex();
 		while (lex.match("^") || lex.match(".") || lex.match("[")) {
 			if (lex.match("^")) {
@@ -549,9 +566,10 @@ public class Parser {
 				if ( !(ctype instanceof ClassType) )
 					parseError(39);
 				ClassType ct = (ClassType) ctype;
-				if(ct.symbolTable.nameDefined(lex.tokenText()) == false)
+				if(!ct.symbolTable.nameDefined(lex.tokenText()))
 					parseError(29);
 				result = ct.symbolTable.lookupName(result, lex.tokenText());
+				lex.nextLex();
 			}
 			else {
 				lex.nextLex();
@@ -560,7 +578,7 @@ public class Parser {
 				if ( !(addressBaseType(result.type) instanceof ArrayType) )
 					parseError(40);
 				ArrayType atype = (ArrayType) addressBaseType(result.type);
-				
+
 				if (! indexExpression.type.equals(PrimitiveType.IntegerType))
 					parseError(41);
 				indexExpression = new BinaryNode( BinaryNode.minus, PrimitiveType.IntegerType,
@@ -575,7 +593,7 @@ public class Parser {
 		stop("reference");
 		return result;
 	}
-	
+
 	private Type addressBaseType(Type t) throws ParseException {
 		if (! (t instanceof AddressType))
 			parseError(37);
