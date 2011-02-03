@@ -518,10 +518,14 @@ public class Parser {
 		stop("term");
 	}
 
-	private void reference (SymbolTable sym) throws ParseException {
+	private Ast reference (SymbolTable sym) throws ParseException {
 		start("reference");
-		if (! lex.isIdentifier())
+		Ast result = null;
+		
+		if (!lex.isIdentifier())
 			parseError(27);
+		result = sym.lookupName(new FramePointer(), lex.tokenText());
+		String id = lex.tokenText();
 		lex.nextLex();
 		while (lex.match("^") || lex.match(".") || lex.match("[")) {
 			if (lex.match("^")) {
@@ -542,6 +546,7 @@ public class Parser {
 			}
 		}
 		stop("reference");
+		return result;
 	}
 
 }
