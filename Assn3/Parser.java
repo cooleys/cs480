@@ -392,6 +392,8 @@ public class Parser {
 
 	private void assignOrFunction (SymbolTable sym) throws ParseException {
 		start("assignOrFunction");
+		Ast val = reference(sym);
+		val.genCode();
 		reference(sym);
 		if (lex.match("=")) {
 			lex.nextLex();
@@ -504,6 +506,8 @@ public class Parser {
 			lex.nextLex();
 		}
 		else if (lex.isIdentifier()) {
+			Ast val = reference(sym);
+			val.genCode();
 			reference(sym);
 			if (lex.match("(")) {
 				lex.nextLex();
@@ -524,22 +528,45 @@ public class Parser {
 		
 		if (!lex.isIdentifier())
 			parseError(27);
-		result = sym.lookupName(new FramePointer(), lex.tokenText());
-		String id = lex.tokenText();
+		else
+			result = sym.lookupName(new FramePointer(), lex.tokenText());
+		
 		lex.nextLex();
 		while (lex.match("^") || lex.match(".") || lex.match("[")) {
 			if (lex.match("^")) {
 				lex.nextLex();
+				Type btype = addressBaseType(result.type);
+				if ( !(btype instanceof PointerType) )
+					parseError(38);
+				PointerType pb = (PointerType) btype;
+				result = new UnaryNode(UnaryNode.dereference,new AddressType(pb.baseType), result);
 			}
 			else if (lex.match(".")) {
 				lex.nextLex();
-				if (! lex.isIdentifier())
+				if (!lex.isIdentifier())
 					parseError(27);
-				lex.nextLex();
+				Type ctype = addressBaseType(result.type);
+				if ( !(ctype instanceof ClassType) )
+					parseError(39);
+				ClassType ct = (ClassType) ctype;
+				if(ct.symbolTable.nameDefined(lex.tokenText()) == false)
+					parseError(29);
+				result = ct.symbolTable.lookupName(result, lex.tokenText());
 			}
 			else {
 				lex.nextLex();
-				expression(sym);
+				expression(sym); // assume recursive call returns 42
+				Ast indexExpression = new IntegerNode(42); // for now
+				if ( !(addressBaseType(result.type) instanceof ArrayType) )
+					parseError(40);
+				ArrayType atype = (ArrayType) addressBaseType(result.type);
+				
+				if (! indexExpression.type.equals(PrimitiveType.IntegerType))
+					parseError(41);
+				indexExpression = new BinaryNode( BinaryNode.minus, PrimitiveType.IntegerType,
+						indexExpression, new IntegerNode(atype.lowerBound));
+				BinaryNode bnode = new BinaryNode(BinaryNode.times, atype.elementType, indexExpression, new IntegerNode(atype.elementType.size()));
+				result = new BinaryNode(BinaryNode.plus, new AddressType(atype.elementType), result, bnode);
 				if (! lex.match("]"))
 					parseError(24);
 				lex.nextLex();
@@ -547,6 +574,13 @@ public class Parser {
 		}
 		stop("reference");
 		return result;
+	}
+	
+	private Type addressBaseType(Type t) throws ParseException {
+		if (! (t instanceof AddressType))
+			parseError(37);
+		AddressType at = (AddressType) t;
+		return at.baseType;
 	}
 
 }

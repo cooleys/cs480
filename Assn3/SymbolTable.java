@@ -1,4 +1,5 @@
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
 /*
 *	Sarah Cooley
@@ -8,8 +9,6 @@ import java.util.HashMap;
 */
 
 interface SymbolTable {
-	public HashMap<String, Symbol> table = new HashMap<String, Symbol>();
-	
 		// methods to enter values into symbol table
 	public void enterConstant (String name, Ast value);
 	public void enterType (String name, Type type);
@@ -24,6 +23,8 @@ interface SymbolTable {
 }
 
 class GlobalSymbolTable implements SymbolTable {
+	public Hashtable<String, Symbol> table = new Hashtable<String, Symbol>();
+	
 	public void enterConstant (String name, Ast value) 
 		{ enterSymbol(new ConstantSymbol(name, value)); }
 
@@ -81,7 +82,9 @@ class GlobalSymbolTable implements SymbolTable {
 
 class FunctionSymbolTable implements SymbolTable {
 	SymbolTable surrounding = null;
-	int fp = 0, params = 8, locals=0;
+	int params = 8, locals=0;
+	private ArrayList<Symbol> local_vars = new ArrayList<Symbol>();
+	private ArrayList<Symbol> parameters = new ArrayList<Symbol>();
 	public boolean doingArguments = true;
 
 	FunctionSymbolTable (SymbolTable st) { surrounding = st; }
@@ -94,20 +97,36 @@ class FunctionSymbolTable implements SymbolTable {
 
 	public void enterVariable (String name, Type type)
 	{
-		if(doingArguments)
-			//keep track of offsets
-		enterSymbol(new OffsetSymbol(name, new AddressType(type), 27));
+		if(doingArguments){
+			params += type.size();
+			enterSymbol(new OffsetSymbol(name, new AddressType(type), params));
+		}
+		else{
+			locals -= type.size();
+			enterSymbol(new OffsetSymbol(name, new AddressType(type), locals));
+		}
 	}
 
 	public void enterFunction (String name, FunctionType ft) 
 		{ enterSymbol (new GlobalSymbol(name, ft, name)); }
 
 	private void enterSymbol (Symbol s) {
-		table.put(s.name, s);
+		if(doingArguments)
+			parameters.add(s);
+		else
+			local_vars.add(s);
 	}
 
 	private Symbol findSymbol (String name) {
-		return table.get(name);
+		for(Symbol s:parameters){
+			if(s.name.equals(name))
+				return s;
+		}
+		for(Symbol s:local_vars){
+			if(s.name.equals(name))
+				return s;
+		}
+		return null;
 	}
 
 	public boolean nameDefined (String name) {
@@ -153,6 +172,7 @@ class FunctionSymbolTable implements SymbolTable {
 }
 
 class ClassSymbolTable implements SymbolTable {
+	public Hashtable<String, Symbol> table = new Hashtable<String, Symbol>();
 	private SymbolTable surround = null;
 	private int size = 0;
 
