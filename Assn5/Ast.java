@@ -1,6 +1,10 @@
-//
-//	abstract syntax tree
-//
+/*
+ *  Sarah Cooley
+ *  CS480 - Winter2011
+ *  Assignment 5
+ *  Original Author: Tim Budd
+ */
+
 
 import java.util.Vector;
 
@@ -10,6 +14,8 @@ abstract class Ast {
 	public Type type;
 
 	abstract public void genCode ();
+
+	public Ast optimize () { return this; }
 
 	public void branchIfTrue (Label lab) throws ParseException {
 		genCode();
@@ -31,50 +37,50 @@ class GlobalNode extends Ast {
 
 	public void genCode() {
 		System.out.println("Global " + name + " " + type);
-		}
+	}
 }
 
 class IntegerNode extends Ast {
 	public int val;
 
 	public IntegerNode (int v) 
-		{ super(PrimitiveType.IntegerType); val = v; }
+	{ super(PrimitiveType.IntegerType); val = v; }
 	public IntegerNode (Integer v) 
-		{ super(PrimitiveType.IntegerType); val = v.intValue(); }
+	{ super(PrimitiveType.IntegerType); val = v.intValue(); }
 
 	public String toString() { return "Integer " + val; }
 
 	public void genCode() {
 		System.out.println("Integer " + val);
-		}
+	}
 }
 
 class RealNode extends Ast {
 	private double val;
 
 	public RealNode (double v) 
-		{ super(PrimitiveType.RealType); val = v; }
+	{ super(PrimitiveType.RealType); val = v; }
 	public RealNode (Double v) 
-		{ super(PrimitiveType.RealType); val = v.doubleValue(); }
+	{ super(PrimitiveType.RealType); val = v.doubleValue(); }
 
 	public String toString() { return "real " + val; }
 
 	public void genCode() {
 		System.out.println("Real " + val);
-		}
+	}
 }
 
 class StringNode extends Ast {
 	private String val;
 
 	public StringNode (String v) 
-		{ super(new StringType(v)); val = v; }
+	{ super(new StringType(v)); val = v; }
 
 	public String toString() { return "string " + val; }
 
 	public void genCode() {
 		System.out.println("String " + val); 
-		}
+	}
 }
 
 class FramePointer extends Ast {
@@ -82,7 +88,7 @@ class FramePointer extends Ast {
 
 	public void genCode () {
 		System.out.println("frame pointer");
-		}
+	}
 
 	public String toString() { return "frame pointer"; }
 }
@@ -94,6 +100,8 @@ class UnaryNode extends Ast {
 	static final int negation = 4;
 	static final int newOp = 5;
 
+	public int nodeType;
+	public Ast child;
 
 	public UnaryNode (int nt, Type t, Ast b) { 
 		super(t); 
@@ -101,8 +109,7 @@ class UnaryNode extends Ast {
 		child = b;
 	}
 
-	public int nodeType;
-	public Ast child;
+	public Ast optimize () { return this; }
 
 	public String toString() { return "Unary node " + nodeType +
 		"(" + child + ")" + type; }
@@ -110,16 +117,16 @@ class UnaryNode extends Ast {
 	public void genCode () {
 		child.genCode();
 		switch(nodeType) {
-			case dereference:
-				System.out.println("dereference " + type); break;
-			case convertToReal:
-				System.out.println("convert to real" + type); break;
-			case notOp:
-				System.out.println("not op " + type); break;
-			case negation:
-				System.out.println("numeric negation " + type); break;
-			case newOp:
-				System.out.println("new memory " + type); break;
+		case dereference:
+			System.out.println("dereference " + type); break;
+		case convertToReal:
+			System.out.println("convert to real" + type); break;
+		case notOp:
+			System.out.println("not op " + type); break;
+		case negation:
+			System.out.println("numeric negation " + type); break;
+		case newOp:
+			System.out.println("new memory " + type); break;
 		}
 	}
 }
@@ -145,7 +152,9 @@ class BinaryNode extends Ast {
 		NodeType = nt;
 		LeftChild = l;
 		RightChild = r;
-		}
+	}
+
+	public Ast optimize () { return this; }
 
 	public String toString() { return "Binary Node " + NodeType +
 		"(" + LeftChild + "," + RightChild + ")" + type; }
@@ -154,36 +163,36 @@ class BinaryNode extends Ast {
 		LeftChild.genCode();
 		RightChild.genCode();
 		switch (NodeType) {
-			case plus: 
-				System.out.println("do addition " + type); break;
-			case minus: 
-				System.out.println("do subtraction " + type); break;
-			case leftShift: 
-				System.out.println("do left shift " + type); break;
-			case times: 
-				System.out.println("do multiplication " + type); break;
-			case divide: 
-				System.out.println("do division " + type); break;
-			case remainder:
-				System.out.println("do remainder " + type); break;
-			case and: 
-				System.out.println("do and " + type); break;
-			case or: 
-				System.out.println("do or " + type); break;
-			case less: 
-				System.out.println("compare less " + type); break;
-			case lessEqual: 
-				System.out.println("compare less or equal" + type); break;
-			case equal: 
-				System.out.println("compare equal " + type); break;
-			case notEqual: 
-				System.out.println("compare notEqual " + type); break;
-			case greater: 
-				System.out.println("compare greater " + type); break;
-			case greaterEqual: 
-				System.out.println("compare greaterEqual " + type); break;
-			}
+		case plus: 
+			System.out.println("do addition " + type); break;
+		case minus: 
+			System.out.println("do subtraction " + type); break;
+		case leftShift: 
+			System.out.println("do left shift " + type); break;
+		case times: 
+			System.out.println("do multiplication " + type); break;
+		case divide: 
+			System.out.println("do division " + type); break;
+		case remainder:
+			System.out.println("do remainder " + type); break;
+		case and: 
+			System.out.println("do and " + type); break;
+		case or: 
+			System.out.println("do or " + type); break;
+		case less: 
+			System.out.println("compare less " + type); break;
+		case lessEqual: 
+			System.out.println("compare less or equal" + type); break;
+		case equal: 
+			System.out.println("compare equal " + type); break;
+		case notEqual: 
+			System.out.println("compare notEqual " + type); break;
+		case greater: 
+			System.out.println("compare greater " + type); break;
+		case greaterEqual: 
+			System.out.println("compare greaterEqual " + type); break;
 		}
+	}
 
 	public int NodeType;
 	public Ast LeftChild;
@@ -198,7 +207,9 @@ class FunctionCallNode extends Ast {
 		super (((FunctionType) f.type).returnType);
 		fun = f;
 		args = a;
-		}
+	}
+
+	public Ast optimize () { return this; }
 
 	public String toString() { return "Function Call Node"; }
 
@@ -208,7 +219,7 @@ class FunctionCallNode extends Ast {
 			Ast arg = (Ast) args.elementAt(i);
 			arg.genCode();
 			System.out.println("push argument " + arg.type);
-			}
+		}
 
 		fun.genCode();
 		System.out.println("function call " + type);
