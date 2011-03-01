@@ -436,7 +436,7 @@ public class Parser {
 				parseError(22);
 			lex.nextLex();
 			val = new FunctionCallNode(val, args);
-			val.genCode();
+			val.optimize().genCode();
 		}
 		else
 			parseError(20);

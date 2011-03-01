@@ -16,6 +16,10 @@ abstract class Ast {
 	abstract public void genCode ();
 
 	public Ast optimize () { return this; }
+	
+	protected boolean isInt(){
+		return(this instanceof IntegerNode);
+	}
 
 	public void branchIfTrue (Label lab) throws ParseException {
 		genCode();
@@ -62,6 +66,7 @@ class RealNode extends Ast {
 	{ super(PrimitiveType.RealType); val = v; }
 	public RealNode (Double v) 
 	{ super(PrimitiveType.RealType); val = v.doubleValue(); }
+	
 
 	public String toString() { return "real " + val; }
 
@@ -110,10 +115,10 @@ class UnaryNode extends Ast {
 	}
 
 	public Ast optimize () { 
-		UnaryNode node = this;		
+		UnaryNode node = this;
 		node.child = node.child.optimize();
-
 		if(node.nodeType == UnaryNode.negation) {
+			System.out.println("Called");
 			if(node.child.type.equals(PrimitiveType.IntegerType)) {
 				((IntegerNode)(node.child)).val =  (((IntegerNode)(node.child)).val)*(-1);
 				return new IntegerNode(((IntegerNode)(node.child)).val);
@@ -165,7 +170,41 @@ class BinaryNode extends Ast {
 		RightChild = r;
 	}
 
-	public Ast optimize () { return this; }
+	public Ast optimize () { 
+		BinaryNode node = this;		
+		
+		node.LeftChild = node.LeftChild.optimize();
+		node.RightChild = node.RightChild.optimize();
+		
+		//c+c, t+0, c+t, (t+c)+t, (t+c)+t2, t+(t2+c)
+		if(node.NodeType == BinaryNode.plus) {
+			//c+t -> t+c
+			if(node.LeftChild.isInt() && (! node.RightChild.isInt()) ) {
+				Ast t = node.LeftChild;
+				node.LeftChild = node.RightChild;
+				node.RightChild = t;
+			}
+			
+			//c+c -> c
+			if(node.LeftChild.isInt() && node.RightChild.isInt()){
+				return(new IntegerNode(((IntegerNode)node.LeftChild).val
+						+ ((IntegerNode)node.RightChild).val));
+			}
+			
+			//t+0 -> t
+			if(node.RightChild.isInt() && ((IntegerNode)node.RightChild).val == 0) {
+				node.LeftChild.type = node.type;
+				return node.LeftChild;
+			}
+			
+			//(t + c) + c -> (t + c2)
+			//if(node.RightChild.isInt() && node.LeftChild)
+			
+			
+			
+		}
+		return node;
+	}
 
 	public String toString() { return "Binary Node " + NodeType +
 		"(" + LeftChild + "," + RightChild + ")" + type; }
@@ -220,7 +259,13 @@ class FunctionCallNode extends Ast {
 		args = a;
 	}
 
-	public Ast optimize () { return this; }
+	public Ast optimize () { 
+		FunctionCallNode node = this;
+		for(int i = 0; i < node.args.size(); i++) {
+			node.args.setElementAt(((Ast)node.args.elementAt(i)).optimize(), i);
+		}		
+		return node;
+	}
 
 	public String toString() { return "Function Call Node"; }
 
