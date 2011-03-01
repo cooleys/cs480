@@ -1,8 +1,9 @@
-//
-//	parser skeleton, CS 480/580, Winter 1998
-//	written by Tim Budd
-//		modified by:
-//
+/*
+ *  Sarah Cooley
+ *  CS480 - Winter2011
+ *  Assignment 5
+ *  Original Author: Tim Budd
+ */
 
 import java.util.Vector;
 
@@ -21,23 +22,23 @@ public class Parser {
 		sym.enterFunction("printReal", new FunctionType(PrimitiveType.VoidType));
 		sym.enterFunction("printStr", new FunctionType(PrimitiveType.VoidType));
 		program(sym);
-		if (lex.tokenCategory() != lex.endOfInput)
+		if (lex.tokenCategory() != Lexer.endOfInput)
 			parseError(3); // expecting end of file
-		}
+	}
 
 	private final void start (String n) {
 		if (debug) System.out.println("start " + n + 
-			" token: " + lex.tokenText());
-		}
+				" token: " + lex.tokenText());
+	}
 
 	private final void stop (String n) {
 		if (debug) System.out.println("recognized " + n + 
-			" token: " + lex.tokenText());
-		}
+				" token: " + lex.tokenText());
+	}
 
 	private void parseError(int number) throws ParseException {
 		throw new ParseException(number);
-		}
+	}
 
 	private void program (SymbolTable sym) throws ParseException {
 		start("program");
@@ -50,19 +51,19 @@ public class Parser {
 				throw new ParseException(18);
 		}
 		stop("program");
-		}
+	}
 
 	private void declaration (SymbolTable sym) throws ParseException {
 		start("declaration");
 		if (lex.match("class"))
 			classDeclaration(sym);
 		else if (lex.match("function") || lex.match("const") 
-			|| lex.match("var") || lex.match("type"))
+				|| lex.match("var") || lex.match("type"))
 			nonClassDeclaration(sym);
 		else 
 			parseError(26);
 		stop("declaration");
-		}
+	}
 
 	private void nonClassDeclaration (SymbolTable sym) throws ParseException {
 		start("nonClassDeclaration");
@@ -74,7 +75,7 @@ public class Parser {
 		else
 			parseError(26);
 		stop("nonClassDeclaration");
-		}
+	}
 
 	private void nonFunctionDeclaration (SymbolTable sym) throws ParseException {
 		start("nonFunctionDeclaration");
@@ -87,7 +88,7 @@ public class Parser {
 		else 
 			parseError(26);
 		stop("nonFunctionDeclaration");
-		}
+	}
 
 	private void constantDeclaration (SymbolTable sym) throws ParseException {
 		start("constantDeclaration");
@@ -103,21 +104,21 @@ public class Parser {
 				parseError(20);
 			lex.nextLex();
 			Ast value = null;
-			if (lex.tokenCategory() == lex.intToken)
+			if (lex.tokenCategory() == Lexer.intToken)
 				value = new IntegerNode(new Integer(lex.tokenText()));
-			else if (lex.tokenCategory() == lex.realToken)
+			else if (lex.tokenCategory() == Lexer.realToken)
 				value = new RealNode(new Double(lex.tokenText()));
-			else if (lex.tokenCategory() == lex.stringToken)
+			else if (lex.tokenCategory() == Lexer.stringToken)
 				value = new StringNode(lex.tokenText());
 			else
 				parseError(31);
 			sym.enterConstant(name, value);
 			lex.nextLex();
-			}
+		}
 		else
 			parseError(6);
 		stop("constantDeclaration");
-		}
+	}
 
 	private void typeDeclaration (SymbolTable sym) throws ParseException {
 		start("typeDeclaration");
@@ -143,11 +144,11 @@ public class Parser {
 		if (lex.match("var")) {
 			lex.nextLex();
 			nameDeclaration(sym);
-			}
+		}
 		else
 			parseError(15);
 		stop("variableDeclaration");
-		}
+	}
 
 	private void nameDeclaration (SymbolTable sym) throws ParseException {
 		start("nameDeclaration");
@@ -165,7 +166,7 @@ public class Parser {
 		if (sym instanceof GlobalSymbolTable)
 			CodeGen.genGlobal(name, t.size());
 		stop("nameDeclaration");
-		}
+	}
 
 	private void classDeclaration(SymbolTable sym) throws ParseException {
 		start("classDeclaration");
@@ -182,7 +183,7 @@ public class Parser {
 		sym.enterType(name, new ClassType(csym));
 		classBody(csym);
 		stop("classDeclaration");
-		}
+	}
 
 	private void classBody(SymbolTable sym) throws ParseException {
 		start("classBody");
@@ -198,7 +199,7 @@ public class Parser {
 		}
 		lex.nextLex();
 		stop("classBody");
-		}
+	}
 
 	private void functionDeclaration(SymbolTable sym) throws ParseException {
 		start("functionDeclaration");
@@ -218,8 +219,8 @@ public class Parser {
 		sym.enterFunction(name, new FunctionType(rt));
 		functionBody(fsym, name);
 		stop("functionDeclaration");
-		}
-		
+	}
+
 	private void arguments (SymbolTable sym) throws ParseException {
 		start("arguments");
 		if (! lex.match("("))
@@ -230,7 +231,7 @@ public class Parser {
 			parseError(22);
 		lex.nextLex();
 		stop("arguments");
-		}
+	}
 
 	private void argumentList (SymbolTable sym) throws ParseException {
 		start("argumentList");
@@ -239,10 +240,10 @@ public class Parser {
 			while (lex.match(",")) {
 				lex.nextLex();
 				nameDeclaration(sym);
-				}
 			}
-		stop("argumentList");
 		}
+		stop("argumentList");
+	}
 
 	private Type returnType (SymbolTable sym) throws ParseException {
 		start("returnType");
@@ -250,10 +251,10 @@ public class Parser {
 		if (lex.match(":")) {
 			lex.nextLex();
 			result = type(sym);
-			}
+		}
 		stop("returnType");
 		return result;
-		}
+	}
 
 	private Type type (SymbolTable sym) throws ParseException {
 		start("type");
@@ -261,21 +262,21 @@ public class Parser {
 		if (lex.isIdentifier()) {
 			result = sym.lookupType(lex.tokenText());
 			lex.nextLex();
-			}
+		}
 		else if (lex.match("^")) {
 			lex.nextLex();
 			result = new PointerType(type(sym));
-			}
+		}
 		else if (lex.match("[")) {
 			lex.nextLex();
-			if (lex.tokenCategory() != lex.intToken)
+			if (lex.tokenCategory() != Lexer.intToken)
 				parseError(32);
 			int lower = (new Integer(lex.tokenText())).intValue();
 			lex.nextLex();
 			if (! lex.match(":"))
 				parseError(19);
 			lex.nextLex();
-			if (lex.tokenCategory() != lex.intToken)
+			if (lex.tokenCategory() != Lexer.intToken)
 				parseError(32);
 			int upper = (new Integer(lex.tokenText())).intValue();
 			lex.nextLex();
@@ -283,12 +284,12 @@ public class Parser {
 				parseError(24);
 			lex.nextLex();
 			result = new ArrayType(lower, upper, type(sym));
-			}
+		}
 		else
 			parseError(30);
 		stop("type");
 		return result;
-		}
+	}
 
 	private void functionBody (SymbolTable sym, String name) throws ParseException {
 		start("functionBody");
@@ -303,7 +304,7 @@ public class Parser {
 		compoundStatement(sym);
 		CodeGen.genEpilog(name);
 		stop("functionBody");
-		}
+	}
 
 	private void compoundStatement (SymbolTable sym) throws ParseException {
 		start("compoundStatement");
@@ -316,10 +317,10 @@ public class Parser {
 				lex.nextLex();
 			else
 				throw new ParseException(18);
-			}
+		}
 		lex.nextLex();
 		stop("compoundStatement");
-		}
+	}
 
 	private void statement (SymbolTable sym) throws ParseException {
 		start("statement");
@@ -336,19 +337,19 @@ public class Parser {
 		else
 			parseError(34);
 		stop("statement");
-		}
+	}
 
 	private boolean firstExpression() {
 		if (lex.match("(") || lex.match("not") || lex.match("-") || lex.match("&"))
 			return true;
 		if (lex.isIdentifier())
 			return true;
-		if ((lex.tokenCategory() == lex.intToken) ||
-			(lex.tokenCategory() == lex.realToken) ||
-			(lex.tokenCategory() == lex.stringToken))
+		if ((lex.tokenCategory() == Lexer.intToken) ||
+				(lex.tokenCategory() == Lexer.realToken) ||
+				(lex.tokenCategory() == Lexer.stringToken))
 			return true;
 		return false;
-		}
+	}
 
 	private void returnStatement (SymbolTable sym) throws ParseException {
 		start("returnStatement");
@@ -362,10 +363,10 @@ public class Parser {
 			if (! lex.match(")"))
 				parseError(22);
 			lex.nextLex();
-			}
-		CodeGen.genReturn(result);
-		stop("returnStatement");
 		}
+		CodeGen.genReturn(result.optimize());
+		stop("returnStatement");
+	}
 
 	private void ifStatement (SymbolTable sym) throws ParseException {
 		start("ifStatement");
@@ -379,7 +380,7 @@ public class Parser {
 			throw new ParseException(13);
 		mustBeBoolean(test);
 		Label lab1 = new Label();
-		test.branchIfFalse(lab1);
+		test.optimize().branchIfFalse(lab1);
 		statement(sym);
 		if (lex.match("else")) {
 			lex.nextLex();
@@ -392,7 +393,7 @@ public class Parser {
 			lab1.genCode();
 		}
 		stop("ifStatement");
-		}
+	}
 
 	private void whileStatement (SymbolTable sym) throws ParseException {
 		start("whileStatement");
@@ -408,12 +409,12 @@ public class Parser {
 		Label lab1 = new Label();
 		Label lab2 = new Label();
 		lab1.genCode();
-		test.branchIfFalse(lab2);
+		test.optimize().branchIfFalse(lab2);
 		statement(sym);
 		lab1.genBranch();
 		lab2.genCode();
 		stop("whileStatement");
-		}
+	}
 
 	private void assignOrFunction (SymbolTable sym) throws ParseException {
 		start("assignOrFunction");
@@ -424,8 +425,8 @@ public class Parser {
 			Type lt = addressBaseType(val.type);
 			if (! lt.equals(right.type))
 				parseError(44);
-			CodeGen.genAssign(val, right);
-			}
+			CodeGen.genAssign(val.optimize(), right.optimize());
+		}
 		else if (lex.match("(")) {
 			if (! (val.type instanceof FunctionType))
 				parseError(45);
@@ -436,210 +437,210 @@ public class Parser {
 			lex.nextLex();
 			val = new FunctionCallNode(val, args);
 			val.genCode();
-			}
+		}
 		else
 			parseError(20);
-		    stop("assignOrFunction");
-		    }
+		stop("assignOrFunction");
+	}
 
-	    private Vector parameterList (SymbolTable sym) throws ParseException {
-		    start("parameterList");
-		    Vector args = new Vector();
-		    if (firstExpression()) {
-			    args.addElement(expression(sym));
-			    while (lex.match(",")) {
-				    lex.nextLex();
-				    args.addElement(expression(sym));
-				    }
-			    }
-		    stop("parameterList");
-		    return args;
-		    }
-
-	    private void mustBeBoolean(Ast v) throws ParseException {
-		    if (! v.type.equals(PrimitiveType.BooleanType))
-			    parseError(43);;
-	    }
-
-	    private Ast expression (SymbolTable sym) throws ParseException {
-		    start("expression");
-		    Ast result = relExpression(sym);
-		    while (lex.match("and") || lex.match("or")) {
-			    String op = lex.tokenText();
-			    mustBeBoolean(result);
-			    lex.nextLex();
-			    Ast right = relExpression(sym);
-			    mustBeBoolean(right);
-			    if (op.equals("and"))
-				    result = new BinaryNode(BinaryNode.and,
-					    result.type, result, right);
-			    else
-				    result = new BinaryNode(BinaryNode.or,
-					    result.type, result, right);
-			    }
-		    stop("expression");
-		    return result;
-		    }
-
-	    private int relOp() {
-		    if (lex.match("<")) return BinaryNode.less;
-		    if (lex.match("<=")) return BinaryNode.lessEqual;
-		    if (lex.match("==")) return BinaryNode.equal;
-		    if (lex.match("!=")) return BinaryNode.notEqual;
-		    if (lex.match(">")) return BinaryNode.greater;
-		    if (lex.match(">=")) return BinaryNode.greaterEqual;
-		    return 0;
-		    }
-
-	    private Ast relExpression (SymbolTable sym) throws ParseException {
-		    start("relExpression");
-		    Ast result = plusExpression(sym);
-		    int op = relOp();
-		    if (op != 0) {
-			    lex.nextLex();
-			    Ast right = plusExpression(sym);
-			    if (! result.type.equals(right.type))
-				    parseError(44);
-			    result = new BinaryNode(op, 
-				    PrimitiveType.BooleanType, result, right);
-			    }
-		    stop("relExpression");
-		    return result;
-		    }
-
-	    private Ast checkConversion (Ast left, Ast right) {
-		    if (left.type.equals(PrimitiveType.IntegerType) &&
-			    right.type.equals(PrimitiveType.RealType))
-			    return new UnaryNode(UnaryNode.convertToReal,
-				    PrimitiveType.RealType, left);
-		    return left;
-	    }
-
-	    private void mustBeNumeric (Ast left) throws ParseException {
-		    Type t = left.type;
-		    if (t.equals(PrimitiveType.IntegerType)) return;
-		    if (t.equals(PrimitiveType.RealType)) return;
-		    parseError(46);
-	    }
-
-	    private int plusOp () {
-		    if (lex.match("+")) return BinaryNode.plus;
-		    if (lex.match("-")) return BinaryNode.minus;
-		    if (lex.match("<<")) return BinaryNode.leftShift;
-		    return 0;
-	    }
-
-	    private Ast plusExpression (SymbolTable sym) throws ParseException {
-		    start("plusExpression");
-		    Ast result = timesExpression(sym);
-		    int op = 0;
-		    while ((op = plusOp()) != 0) {
-			    lex.nextLex();
-			    Ast right = timesExpression(sym);
-			    if (op == BinaryNode.leftShift) {
-				    mustBeInteger(result);
-				    mustBeInteger(right);
-			    } else {
-				    result = checkConversion(result, right);
-				    right = checkConversion(right, result);
-				    mustBeNumeric(result);
-				    mustBeNumeric(right);
-				    if (! result.type.equals(right.type))
-					    parseError(44);
-			    }
-			    result = new BinaryNode(op, result.type, result, right);
-			    }
-		    stop("plusExpression");
-		    return result;
-		    }
-
-	    private int timesOp () {
-		    if (lex.match("*")) return BinaryNode.times;
-		    if (lex.match("/")) return BinaryNode.divide;
-		    if (lex.match("%")) return BinaryNode.remainder;
-		    return 0;
-	    }
-
-	    private void mustBeInteger (Ast v) throws ParseException {
-		    if (! v.type.equals(PrimitiveType.IntegerType))
-			    parseError(41);
-	    }
-
-	    private Ast timesExpression (SymbolTable sym) throws ParseException {
-		    start("timesExpression");
-		    Ast result = term(sym);
-		    int op = 0;
-		    while ((op = timesOp()) != 0) {
-			    lex.nextLex();
-			    Ast right = term(sym);
-			    if (op == BinaryNode.remainder) {
-				    mustBeInteger(result);
-				    mustBeInteger(right);
-			    } else {
-				    result = checkConversion(result, right);
-				    right = checkConversion(right, result);
-				    mustBeNumeric(result);
-				    mustBeNumeric(right);
-				    if (! result.type.equals(right.type))
-					    parseError(44);
-			    }
-			    result = new BinaryNode(op, result.type, result, right);
-			    }
-		    stop("timesExpression");
-		    return result;
-		    }
-
-	    private Ast term (SymbolTable sym) throws ParseException {
-		    start("term");
-		    Ast result = null;
-		    if (lex.match("(")) {
-			    lex.nextLex();
-			    result = expression(sym);
-			    if (! lex.match(")"))
-				    parseError(22);
-			    lex.nextLex();
-			    }
-		    else if (lex.match("not")) {
-			    lex.nextLex();
-			    result = term(sym);
-			    mustBeBoolean(result);
-			    result = new UnaryNode(UnaryNode.notOp,
-				    result.type, result);
-			    }
-		    else if (lex.match("new")) {
-			    lex.nextLex();
-			    Type t = type(sym);
-			    result = new UnaryNode(UnaryNode.newOp, new PointerType(t), new IntegerNode(t.size()));
+	private Vector parameterList (SymbolTable sym) throws ParseException {
+		start("parameterList");
+		Vector args = new Vector();
+		if (firstExpression()) {
+			args.addElement(expression(sym));
+			while (lex.match(",")) {
+				lex.nextLex();
+				args.addElement(expression(sym));
 			}
-		    else if (lex.match("-")) {
-			    lex.nextLex();
-			    result = term(sym);
-			    mustBeNumeric(result);
-			    result = new UnaryNode(UnaryNode.negation,
-				    result.type, result);
-			    }
-		    else if (lex.match("&")) {
-			    lex.nextLex();
-			    result = reference(sym);
-			    result.type = new PointerType(
-				    addressBaseType(result.type));
-			    }
-		    else if (lex.tokenCategory() == lex.intToken) {
-			    result = new IntegerNode(new Integer(lex.tokenText()));
-			    lex.nextLex();
-			    }
-		    else if (lex.tokenCategory() == lex.realToken) {
-			    result = new RealNode(new Double(lex.tokenText()));
-			    lex.nextLex();
-			    }
-		    else if (lex.tokenCategory() == lex.stringToken) {
-			    result = new StringNode(lex.tokenText());
-			    lex.nextLex();
-			    }
-		    else if (lex.isIdentifier()) {
-			    result = reference(sym);
-			    if (lex.match("(")) {
-				    if (! (result.type instanceof FunctionType))
+		}
+		stop("parameterList");
+		return args;
+	}
+
+	private void mustBeBoolean(Ast v) throws ParseException {
+		if (! v.type.equals(PrimitiveType.BooleanType))
+			parseError(43);;
+	}
+
+	private Ast expression (SymbolTable sym) throws ParseException {
+		start("expression");
+		Ast result = relExpression(sym);
+		while (lex.match("and") || lex.match("or")) {
+			String op = lex.tokenText();
+			mustBeBoolean(result);
+			lex.nextLex();
+			Ast right = relExpression(sym);
+			mustBeBoolean(right);
+			if (op.equals("and"))
+				result = new BinaryNode(BinaryNode.and,
+						result.type, result, right);
+			else
+				result = new BinaryNode(BinaryNode.or,
+						result.type, result, right);
+		}
+		stop("expression");
+		return result;
+	}
+
+	private int relOp() {
+		if (lex.match("<")) return BinaryNode.less;
+		if (lex.match("<=")) return BinaryNode.lessEqual;
+		if (lex.match("==")) return BinaryNode.equal;
+		if (lex.match("!=")) return BinaryNode.notEqual;
+		if (lex.match(">")) return BinaryNode.greater;
+		if (lex.match(">=")) return BinaryNode.greaterEqual;
+		return 0;
+	}
+
+	private Ast relExpression (SymbolTable sym) throws ParseException {
+		start("relExpression");
+		Ast result = plusExpression(sym);
+		int op = relOp();
+		if (op != 0) {
+			lex.nextLex();
+			Ast right = plusExpression(sym);
+			if (! result.type.equals(right.type))
+				parseError(44);
+			result = new BinaryNode(op, 
+					PrimitiveType.BooleanType, result, right);
+		}
+		stop("relExpression");
+		return result;
+	}
+
+	private Ast checkConversion (Ast left, Ast right) {
+		if (left.type.equals(PrimitiveType.IntegerType) &&
+				right.type.equals(PrimitiveType.RealType))
+			return new UnaryNode(UnaryNode.convertToReal,
+					PrimitiveType.RealType, left);
+		return left;
+	}
+
+	private void mustBeNumeric (Ast left) throws ParseException {
+		Type t = left.type;
+		if (t.equals(PrimitiveType.IntegerType)) return;
+		if (t.equals(PrimitiveType.RealType)) return;
+		parseError(46);
+	}
+
+	private int plusOp () {
+		if (lex.match("+")) return BinaryNode.plus;
+		if (lex.match("-")) return BinaryNode.minus;
+		if (lex.match("<<")) return BinaryNode.leftShift;
+		return 0;
+	}
+
+	private Ast plusExpression (SymbolTable sym) throws ParseException {
+		start("plusExpression");
+		Ast result = timesExpression(sym);
+		int op = 0;
+		while ((op = plusOp()) != 0) {
+			lex.nextLex();
+			Ast right = timesExpression(sym);
+			if (op == BinaryNode.leftShift) {
+				mustBeInteger(result);
+				mustBeInteger(right);
+			} else {
+				result = checkConversion(result, right);
+				right = checkConversion(right, result);
+				mustBeNumeric(result);
+				mustBeNumeric(right);
+				if (! result.type.equals(right.type))
+					parseError(44);
+			}
+			result = new BinaryNode(op, result.type, result, right);
+		}
+		stop("plusExpression");
+		return result;
+	}
+
+	private int timesOp () {
+		if (lex.match("*")) return BinaryNode.times;
+		if (lex.match("/")) return BinaryNode.divide;
+		if (lex.match("%")) return BinaryNode.remainder;
+		return 0;
+	}
+
+	private void mustBeInteger (Ast v) throws ParseException {
+		if (! v.type.equals(PrimitiveType.IntegerType))
+			parseError(41);
+	}
+
+	private Ast timesExpression (SymbolTable sym) throws ParseException {
+		start("timesExpression");
+		Ast result = term(sym);
+		int op = 0;
+		while ((op = timesOp()) != 0) {
+			lex.nextLex();
+			Ast right = term(sym);
+			if (op == BinaryNode.remainder) {
+				mustBeInteger(result);
+				mustBeInteger(right);
+			} else {
+				result = checkConversion(result, right);
+				right = checkConversion(right, result);
+				mustBeNumeric(result);
+				mustBeNumeric(right);
+				if (! result.type.equals(right.type))
+					parseError(44);
+			}
+			result = new BinaryNode(op, result.type, result, right);
+		}
+		stop("timesExpression");
+		return result;
+	}
+
+	private Ast term (SymbolTable sym) throws ParseException {
+		start("term");
+		Ast result = null;
+		if (lex.match("(")) {
+			lex.nextLex();
+			result = expression(sym);
+			if (! lex.match(")"))
+				parseError(22);
+			lex.nextLex();
+		}
+		else if (lex.match("not")) {
+			lex.nextLex();
+			result = term(sym);
+			mustBeBoolean(result);
+			result = new UnaryNode(UnaryNode.notOp,
+					result.type, result);
+		}
+		else if (lex.match("new")) {
+			lex.nextLex();
+			Type t = type(sym);
+			result = new UnaryNode(UnaryNode.newOp, new PointerType(t), new IntegerNode(t.size()));
+		}
+		else if (lex.match("-")) {
+			lex.nextLex();
+			result = term(sym);
+			mustBeNumeric(result);
+			result = new UnaryNode(UnaryNode.negation,
+					result.type, result);
+		}
+		else if (lex.match("&")) {
+			lex.nextLex();
+			result = reference(sym);
+			result.type = new PointerType(
+					addressBaseType(result.type));
+		}
+		else if (lex.tokenCategory() == Lexer.intToken) {
+			result = new IntegerNode(new Integer(lex.tokenText()));
+			lex.nextLex();
+		}
+		else if (lex.tokenCategory() == Lexer.realToken) {
+			result = new RealNode(new Double(lex.tokenText()));
+			lex.nextLex();
+		}
+		else if (lex.tokenCategory() == Lexer.stringToken) {
+			result = new StringNode(lex.tokenText());
+			lex.nextLex();
+		}
+		else if (lex.isIdentifier()) {
+			result = reference(sym);
+			if (lex.match("(")) {
+				if (! (result.type instanceof FunctionType))
 					parseError(45);
 				lex.nextLex();
 				Vector args = parameterList(sym);
@@ -650,15 +651,15 @@ public class Parser {
 			} else {
 				if (result.type instanceof AddressType)
 					result = new UnaryNode(
-						UnaryNode.dereference,
-						addressBaseType(result.type),
-						result);
+							UnaryNode.dereference,
+							addressBaseType(result.type),
+							result);
 			}
 		} else
 			parseError(33);
 		stop("term");
 		return result;
-		}
+	}
 
 	private Type addressBaseType(Type t) throws ParseException {
 		if (! (t instanceof AddressType))
@@ -681,9 +682,9 @@ public class Parser {
 					parseError(38);
 				PointerType pb = (PointerType) b;
 				result = new UnaryNode(UnaryNode.dereference,
-					new AddressType(pb.baseType), result);
+						new AddressType(pb.baseType), result);
 				lex.nextLex();
-				}
+			}
 			else if (lex.match(".")) {
 				lex.nextLex();
 				if (! lex.isIdentifier())
@@ -693,10 +694,10 @@ public class Parser {
 					parseError(39);
 				ClassType pb = (ClassType) b;
 				if (! pb.symbolTable.nameDefined(lex.tokenText()))
-				   throw new ParseException(29);
+					throw new ParseException(29);
 				result = pb.symbolTable.lookupName(result, lex.tokenText());
 				lex.nextLex();
-				}
+			}
 			else {
 				lex.nextLex();
 				Ast indexExpression = expression(sym);
@@ -705,30 +706,30 @@ public class Parser {
 					parseError(40);
 				ArrayType at = (ArrayType) b;
 				if (! indexExpression.type.equals(
-					PrimitiveType.IntegerType))
-						parseError(41);
+						PrimitiveType.IntegerType))
+					parseError(41);
 				indexExpression = new BinaryNode(
-					BinaryNode.minus, 
-					PrimitiveType.IntegerType,
-					indexExpression, 
+						BinaryNode.minus, 
+						PrimitiveType.IntegerType,
+						indexExpression, 
 						new IntegerNode(at.lowerBound));
 				indexExpression = new BinaryNode(
-					BinaryNode.times, 
-					PrimitiveType.IntegerType,
-					indexExpression, 
+						BinaryNode.times, 
+						PrimitiveType.IntegerType,
+						indexExpression, 
 						new IntegerNode(at.elementType.size()));
 				result = new BinaryNode(
-					BinaryNode.plus, 
-					new AddressType(at.elementType),
-					result,
-					indexExpression);
+						BinaryNode.plus, 
+						new AddressType(at.elementType),
+						result,
+						indexExpression);
 				if (! lex.match("]"))
 					parseError(24);
 				lex.nextLex();
-				}
 			}
+		}
 		stop("reference");
 		return result;
-		}
+	}
 
 }
