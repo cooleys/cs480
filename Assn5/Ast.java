@@ -109,7 +109,18 @@ class UnaryNode extends Ast {
 		child = b;
 	}
 
-	public Ast optimize () { return this; }
+	public Ast optimize () { 
+		UnaryNode node = this;		
+		node.child = node.child.optimize();
+
+		if(node.nodeType == UnaryNode.negation) {
+			if(node.child.type.equals(PrimitiveType.IntegerType)) {
+				((IntegerNode)(node.child)).val =  (((IntegerNode)(node.child)).val)*(-1);
+				return new IntegerNode(((IntegerNode)(node.child)).val);
+			}
+		}
+		return node;
+	}
 
 	public String toString() { return "Unary node " + nodeType +
 		"(" + child + ")" + type; }
