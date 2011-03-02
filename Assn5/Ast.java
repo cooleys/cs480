@@ -20,6 +20,10 @@ abstract class Ast {
 	protected boolean isInt(){
 		return(this instanceof IntegerNode);
 	}
+	
+	protected int intVal(){
+		return(((IntegerNode)this).val);
+	}
 
 	public void branchIfTrue (Label lab) throws ParseException {
 		genCode();
@@ -115,13 +119,13 @@ class UnaryNode extends Ast {
 	}
 
 	public Ast optimize () { 
-		UnaryNode node = this;
+		UnaryNode node = this;		
 		node.child = node.child.optimize();
+
 		if(node.nodeType == UnaryNode.negation) {
-			System.out.println("Called");
 			if(node.child.type.equals(PrimitiveType.IntegerType)) {
-				((IntegerNode)(node.child)).val =  (((IntegerNode)(node.child)).val)*(-1);
-				return new IntegerNode(((IntegerNode)(node.child)).val);
+				((IntegerNode)(node.child)).val =  ((node.child).intVal())*(-1);
+				return new IntegerNode((node.child).intVal());
 			}
 		}
 		return node;
@@ -179,7 +183,7 @@ class BinaryNode extends Ast {
 		//c+c, t+0, c+t, (t+c)+t, (t+c)+t2, t+(t2+c)
 		if(node.NodeType == BinaryNode.plus) {
 			//c+t -> t+c
-			if(node.LeftChild.isInt() && (! node.RightChild.isInt()) ) {
+			if(node.LeftChild.isInt() && (!node.RightChild.isInt())) {
 				Ast t = node.LeftChild;
 				node.LeftChild = node.RightChild;
 				node.RightChild = t;
@@ -187,12 +191,11 @@ class BinaryNode extends Ast {
 			
 			//c+c -> c
 			if(node.LeftChild.isInt() && node.RightChild.isInt()){
-				return(new IntegerNode(((IntegerNode)node.LeftChild).val
-						+ ((IntegerNode)node.RightChild).val));
+				return(new IntegerNode(node.LeftChild.intVal() + node.RightChild.intVal()));
 			}
 			
 			//t+0 -> t
-			if(node.RightChild.isInt() && ((IntegerNode)node.RightChild).val == 0) {
+			if(node.RightChild.isInt() && node.RightChild.intVal() == 0) {
 				node.LeftChild.type = node.type;
 				return node.LeftChild;
 			}
@@ -203,6 +206,22 @@ class BinaryNode extends Ast {
 			
 			
 		}
+		
+		//t-c
+		if(node.NodeType == BinaryNode.minus){
+			//t-c -> t+(-c)
+			if(node.RightChild.isInt()) {
+				node.NodeType = BinaryNode.plus;
+				((IntegerNode)node.RightChild).val = node.RightChild.intVal()*(-1);
+				return node.optimize();
+			}
+		}
+		
+		//t*0, t*1, c*c, (t+c1)*c2
+		if(node.NodeType == BinaryNode.times){
+			
+		}
+		
 		return node;
 	}
 
