@@ -16,11 +16,11 @@ abstract class Ast {
 	abstract public void genCode ();
 
 	public Ast optimize () { return this; }
-	
+
 	protected boolean isInt(){
 		return(this instanceof IntegerNode);
 	}
-	
+
 	protected int intVal(){
 		return(((IntegerNode)this).val);
 	}
@@ -70,7 +70,7 @@ class RealNode extends Ast {
 	{ super(PrimitiveType.RealType); val = v; }
 	public RealNode (Double v) 
 	{ super(PrimitiveType.RealType); val = v.doubleValue(); }
-	
+
 
 	public String toString() { return "real " + val; }
 
@@ -176,37 +176,64 @@ class BinaryNode extends Ast {
 
 	public Ast optimize () { 
 		BinaryNode node = this;		
-		
+
 		node.LeftChild = node.LeftChild.optimize();
 		node.RightChild = node.RightChild.optimize();
-		
+
 		//c+c, t+0, c+t, (t+c)+t, (t+c)+t2, t+(t2+c)
 		if(node.NodeType == BinaryNode.plus) {
 			//c+t -> t+c
 			if(node.LeftChild.isInt() && (!node.RightChild.isInt())) {
-				Ast t = node.LeftChild;
+				Ast c = node.LeftChild;
 				node.LeftChild = node.RightChild;
-				node.RightChild = t;
+				node.RightChild = c;
 			}
-			
+
 			//c+c -> c
 			if(node.LeftChild.isInt() && node.RightChild.isInt()){
 				return(new IntegerNode(node.LeftChild.intVal() + node.RightChild.intVal()));
 			}
-			
+
 			//t+0 -> t
 			if(node.RightChild.isInt() && node.RightChild.intVal() == 0) {
 				node.LeftChild.type = node.type;
 				return node.LeftChild;
 			}
-			
+
 			//(t + c) + c -> (t + c2)
-			//if(node.RightChild.isInt() && node.LeftChild)
+			if(node.LeftChild instanceof BinaryNode && ((BinaryNode)node.LeftChild).NodeType == BinaryNode.plus
+					  && ((BinaryNode)node.LeftChild).RightChild.isInt() && node.RightChild.isInt()){
+				IntegerNode i = new IntegerNode(((BinaryNode)node.LeftChild).RightChild.intVal() + node.RightChild.intVal());
+				node.LeftChild = ((BinaryNode)node.LeftChild).LeftChild;
+				node.RightChild = i;
+			}
 			
+			//(t + c) + t2 -> (t + t2) + c
+			if(node.LeftChild instanceof BinaryNode && ((BinaryNode)node.LeftChild).NodeType == BinaryNode.plus
+					  && ((BinaryNode)node.LeftChild).RightChild.isInt() && (! node.RightChild.isInt())){
+				Ast c = ((BinaryNode)node.LeftChild).RightChild;
+				((BinaryNode)node.LeftChild).RightChild = node.RightChild;
+				node.RightChild = c;
+				node.LeftChild.type = node.type;
+				return node.optimize();
+			}
 			
-			
+			//t+(t2+c) -> (t+t2)+c
+			if(node.RightChild instanceof BinaryNode
+					  && ((BinaryNode)node.RightChild).NodeType == BinaryNode.plus
+					  && ((BinaryNode)node.RightChild).RightChild.isInt() ){
+				Ast t = node.LeftChild;
+				Ast t2 = ((BinaryNode)node.RightChild).LeftChild;
+				Ast c = ((BinaryNode)node.RightChild).RightChild;
+				node.LeftChild = node.RightChild;
+				((BinaryNode)node.LeftChild).LeftChild = t;
+				((BinaryNode)node.LeftChild).RightChild = t2;
+				node.RightChild = c;
+				node.LeftChild.type = node.type;
+				return node.optimize();
+			}
 		}
-		
+
 		//t-c
 		if(node.NodeType == BinaryNode.minus){
 			//t-c -> t+(-c)
@@ -216,12 +243,37 @@ class BinaryNode extends Ast {
 				return node.optimize();
 			}
 		}
-		
+
 		//t*0, t*1, c*c, (t+c1)*c2
 		if(node.NodeType == BinaryNode.times){
-			
+			//t*0 -> 0
+			if(node.RightChild.isInt() && node.RightChild.intVal() == 0) {
+				return new IntegerNode(0);
+			}
+
+			//t*1 -> t
+			if(node.RightChild.isInt() && node.RightChild.intVal() == 1) {
+				node.LeftChild.type = PrimitiveType.IntegerType;
+				return node.LeftChild;
+			}
+
+			//c*c -> c
+			if(node.RightChild.isInt() && node.LeftChild.isInt()){
+				return(new IntegerNode(node.RightChild.intVal()*node.LeftChild.intVal()));
+			}
+
+			//(t+c1)*c2 -> t*c2+c1*c2
+			if(node.RightChild.isInt() && (node.LeftChild instanceof BinaryNode)
+					&& ((BinaryNode)node.LeftChild).NodeType == BinaryNode.plus){
+				IntegerNode c = new IntegerNode(((BinaryNode)node.LeftChild).RightChild.intVal()*node.RightChild.intVal());
+				((BinaryNode)node.LeftChild).NodeType = BinaryNode.times;
+				((BinaryNode)node.LeftChild).RightChild = node.RightChild;
+				node.NodeType = BinaryNode.plus;
+				node.RightChild = c;
+				return node.optimize();
+			}
 		}
-		
+
 		return node;
 	}
 
