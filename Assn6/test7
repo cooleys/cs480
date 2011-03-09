@@ -1,13 +1,10 @@
-function foo (i : int, r : real, j : int)
+function main ()
+var i : int;
+var r : real;
 begin
-	printInt(i);
+	i = 4;
+	printInt(-i);
+	r = 3.2 + i;
+	printReal(-r);
 end;
 
-function main ()
-const i = 3;
-var x : int;
-begin
-		{ see if derefs are put in properly }
-	x = i + x;
-	foo (i << 2, 3.13, x*3);
-end;

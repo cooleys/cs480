@@ -59,7 +59,7 @@ class GlobalSymbolTable implements SymbolTable {
 			TypeSymbol ts = (TypeSymbol) s;
 			return ts.type;
 			}
-		throw new ParseException(30);
+		throw new ParseException(30, name);
 	}
 
 	public Ast lookupName (Ast base, String name) throws ParseException {

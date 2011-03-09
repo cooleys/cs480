@@ -1,12 +1,28 @@
-class a
+function isqrt (r : int) : int
+var low : int;
+var high : int;
+var mid : int;
 begin
-	var b : int;
-	var c : int;
+	printStr("starting");
+	low = 0;
+	high = r;
+	while high > low + 1 do
+	begin
+		printStr("values");
+		mid = (low + high) / 2;
+		printInt(low);
+		printInt(mid);
+		printInt(high);
+		if (mid * mid) > r then
+			high = mid
+		else
+			low = mid;
+	end;
+	printStr("returning");
+	return (low);
 end;
-var j : int;
 
 function main ()
-	var d : [ 2 : 7 ] a;
 begin
-	d[4+j].c = 7;
+	printInt(isqrt(10820));
 end;

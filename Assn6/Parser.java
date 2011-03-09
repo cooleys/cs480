@@ -422,8 +422,8 @@ public class Parser {
 			lex.nextLex();
 			Ast right = expression(sym);
 			Type lt = addressBaseType(val.type);
-			if (! lt.equals(right.type))
-				parseError(44);
+			if (! lt.equals(right.type)) {
+				parseError(44); }
 			CodeGen.genAssign(val, right);
 			}
 		else if (lex.match("(")) {

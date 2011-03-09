@@ -1,4 +1,0 @@
-function main ()
-begin
-     printInt(- - 7);
-end;

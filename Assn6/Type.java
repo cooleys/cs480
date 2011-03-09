@@ -16,7 +16,7 @@ class PrimitiveType extends Type {
 	public static final Type IntegerType = new PrimitiveType(4);
 	public static final Type BooleanType = new PrimitiveType(2);
 	public static final Type CharacterType = new PrimitiveType(1);
-	public static final Type RealType = new PrimitiveType(8);
+	public static final Type RealType = new PrimitiveType(4);
 
 	public PrimitiveType (int s) { sz = s; }
 

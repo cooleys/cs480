@@ -1,7 +1,12 @@
 function main ()
-var a : int;
-var r : real;
+var x : real;
+var y : real;
 begin
-		{ should not generate an error } 
-	r = a + 3.14;
+	x = 10.3;
+	y = 3.1;
+	printReal(x+y);
+	printReal(x-y);
+	printReal(x*y);
+	printReal(x/y);
 end;
+

@@ -1,12 +1,8 @@
-var x : int;
-var y : [ 2 : 5 ] int;
-class foo
+function main()
+var a : ^ [2 : 5] int;
 begin
-	var a : int;
-	var b : [7 : 34 ] real;
+    a = new [2 : 5] int;
+    a^[3] = 7;
+    printInt(a^[3]);
 end;
-var z : foo;
-function main ()
-begin
-	z.b[10 + 2] = 3.14 / 2.0;
-end;
+

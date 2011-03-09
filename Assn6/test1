@@ -1,18 +1,4 @@
-var a : int;
-var b : int;
-function main ()
+function main ( ) 
 begin
-	a = -3;
-	a = a+0;
-	a = 3+4;
-	a = 3+a;
-	a = (a+3)+4;
-	a = (a+3)+b;
-	a = a+(b+3);
-	a = a-3;
-	a = a*0;
-	a = a*1;
-	a = 3*4;
-	a = (a+3)*4;
+	printStr("hello world!");
 end;
-

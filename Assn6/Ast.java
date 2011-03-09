@@ -11,6 +11,8 @@ abstract class Ast {
 
 	abstract public void genCode ();
 
+	public Ast optimize () { return this; }
+
 	public void branchIfTrue (Label lab) throws ParseException {
 		genCode();
 		System.out.println("Branch if True " + lab);
@@ -20,6 +22,12 @@ abstract class Ast {
 		genCode();
 		System.out.println("Branch if False " + lab);
 	}
+
+	public boolean isInteger() { return false; }
+
+	public int cValue() { return 0; }
+
+	public BinaryNode isSum() { return null; }
 }
 
 class GlobalNode extends Ast {
@@ -47,6 +55,10 @@ class IntegerNode extends Ast {
 	public void genCode() {
 		System.out.println("Integer " + val);
 		}
+
+	public boolean isInteger() { return true; }
+
+	public int cValue() { return val; }
 }
 
 class RealNode extends Ast {
@@ -107,6 +119,13 @@ class UnaryNode extends Ast {
 	public String toString() { return "Unary node " + nodeType +
 		"(" + child + ")" + type; }
 
+	public Ast optimize() {
+		Ast newChild = child.optimize();
+		if ((nodeType == negation) && newChild.isInteger())
+			return new IntegerNode(- newChild.cValue());
+		return new UnaryNode(nodeType, type, child.optimize());
+		}
+
 	public void genCode () {
 		child.genCode();
 		switch(nodeType) {
@@ -140,6 +159,11 @@ class BinaryNode extends Ast {
 	static final int leftShift = 13;
 	static final int remainder = 14;
 
+	public BinaryNode isSum() { 
+		if (NodeType == plus) return this;
+		return null; 
+	}
+
 	public BinaryNode (int nt, Type t, Ast l, Ast r) { 
 		super(t); 
 		NodeType = nt;
@@ -149,6 +173,91 @@ class BinaryNode extends Ast {
 
 	public String toString() { return "Binary Node " + NodeType +
 		"(" + LeftChild + "," + RightChild + ")" + type; }
+
+	public Ast optimize() {
+//System.out.println("Optimizing " + toString());
+		Ast newLeft = LeftChild.optimize();
+//System.out.println("Left child is " + newLeft);
+		Ast newRight = RightChild.optimize();
+//System.out.println("Right child is " + newRight);
+		switch (NodeType) {
+			case plus:
+				if (newRight.isInteger()) {
+					int c = newRight.cValue();
+					if (c == 0) {
+						newLeft.type = type;
+						return newLeft;
+						}
+					if (newLeft.isInteger())
+						return new IntegerNode
+						(c + newLeft.cValue());
+					BinaryNode leftSum = newLeft.isSum();
+					if ((leftSum != null) &&
+						leftSum.RightChild.isInteger())
+						return new BinaryNode(plus,
+						type,
+						leftSum.LeftChild,
+						new IntegerNode(c +
+						leftSum.RightChild.cValue())).optimize();
+					}
+				if (newLeft.isInteger())
+					return new BinaryNode(plus, type,
+						newRight, newLeft).optimize();
+				BinaryNode LeftSum = newLeft.isSum();
+				if ((LeftSum != null) && 
+					LeftSum.RightChild.isInteger())
+					return new BinaryNode(plus, type,
+					new BinaryNode(plus, type,
+					LeftSum.LeftChild, newRight),
+					LeftSum.RightChild).optimize();
+				BinaryNode rightSum = newRight.isSum();
+				if ((rightSum != null) &&
+					rightSum.RightChild.isInteger())
+					return new BinaryNode(plus, type,
+					new BinaryNode(plus, type,
+					newLeft, rightSum.LeftChild),
+					rightSum.RightChild).optimize();
+					
+			break;
+
+			case minus:
+				if (newRight.isInteger())
+					return new BinaryNode(plus, type,
+						newLeft, 
+						new IntegerNode(- newRight.cValue())).optimize();
+			break;
+
+			case times:
+				if (newRight.isInteger()) {
+					int c = newRight.cValue();
+					if (c == 0) {
+						newRight.type = type;
+						return newRight;
+						}
+					if (c == 1) {
+						newLeft.type = type;
+						return newLeft;
+						}
+					if (newLeft.isInteger())
+						return new IntegerNode(
+							c * newLeft.cValue());
+					BinaryNode leftSum = newLeft.isSum();
+					if ((leftSum != null) &&
+						leftSum.RightChild.isInteger())
+						return new BinaryNode(plus,
+						type,
+						new BinaryNode(times,
+						leftSum.type,
+						leftSum.LeftChild,
+						newRight),
+						new IntegerNode(c *
+						leftSum.RightChild.cValue())).optimize();
+
+				}
+				break;
+		}
+		return new BinaryNode(NodeType, type, newLeft, newRight);
+	}
 
 	public void genCode () {
 		LeftChild.genCode();
@@ -201,6 +310,15 @@ class FunctionCallNode extends Ast {
 		}
 
 	public String toString() { return "Function Call Node"; }
+
+	public Ast optimize() {
+		Vector newArgs = new Vector();
+		for (int i = 0; i < args.size(); i++) {
+			Ast arg = (Ast) args.elementAt(i);
+			newArgs.addElement(arg.optimize());
+			}
+		return new FunctionCallNode(fun, newArgs);
+	}
 
 	public void genCode () {
 		int i = args.size();
