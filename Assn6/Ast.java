@@ -1,6 +1,9 @@
-//
-//	abstract syntax tree
-//
+/*
+ *  Sarah Cooley
+ *  CS480 - Winter2011
+ *  Assignment 6
+ *  Original Author: Tim Budd
+ */
 
 import java.util.Vector;
 
@@ -9,18 +12,130 @@ abstract class Ast {
 
 	public Type type;
 
-	abstract public void genCode ();
+    protected boolean isConstant() {
+        Ast tree = this;
+        if((tree.type.equals(PrimitiveType.IntegerType)) || (tree.type.equals(PrimitiveType.IntegerType)))
+                return true;
+        else
+                return false;   
+    }
+	
+    protected int getIntValue() {
+        Ast tree = this;
+        try {
+                if( ! (tree.isConstant()))
+                        throw new ParseException(32);
+        } catch (ParseException e) {
+                e.printStackTrace();
+        }                       
+        return ((IntegerNode)tree).val;
+    }
+    
+    protected double getRealValue() {
+        Ast tree = this;
+        try {
+                if( ! (tree.isConstant()))
+                        throw new ParseException(32);
+        } catch (ParseException e) {
+                e.printStackTrace();
+        }                       
+        return ((RealNode)tree).val;
+    }
+
+    abstract public void genCode ();
 
 	public Ast optimize () { return this; }
 
 	public void branchIfTrue (Label lab) throws ParseException {
-		genCode();
-		System.out.println("Branch if True " + lab);
+		if( !(this instanceof BinaryNode) || 
+		  ((((BinaryNode)this).NodeType != BinaryNode.and) &&
+		  (((BinaryNode)this).NodeType != BinaryNode.or)))
+			genCode();
+		if(this instanceof UnaryNode) {
+			if(((UnaryNode)this).nodeType == UnaryNode.notOp) {
+				((UnaryNode)this).child.branchIfFalse(lab);
+			}
+		}
+		else if(this instanceof BinaryNode) {
+			switch(((BinaryNode)this).NodeType) {
+				case BinaryNode.and:
+					Label l2 = new Label();
+					((BinaryNode)this).LeftChild.branchIfFalse(l2);
+					((BinaryNode)this).RightChild.branchIfTrue(lab);
+					l2.genCode();
+					break;
+				case BinaryNode.or:
+					Label l3 = new Label();
+					((BinaryNode)this).LeftChild.branchIfTrue(lab);
+					((BinaryNode)this).RightChild.branchIfFalse(l3);
+					l3.genCode();
+					break;
+				case BinaryNode.less:
+					BinaryNode.genComp("jl", lab);
+					break;
+				case BinaryNode.lessEqual:
+					BinaryNode.genComp("jle", lab);
+					break;
+				case BinaryNode.equal:
+					BinaryNode.genComp("je", lab);
+					break;
+				case BinaryNode.notEqual:
+					BinaryNode.genComp("jne", lab);
+					break;
+				case BinaryNode.greater:
+					BinaryNode.genComp("jg", lab);
+					break;
+				case BinaryNode.greaterEqual:
+					BinaryNode.genComp("jge", lab);
+					break;
+			}
+		}
 	}
 
 	public void branchIfFalse (Label lab) throws ParseException { 
-		genCode();
-		System.out.println("Branch if False " + lab);
+		if( !(this instanceof BinaryNode) || 
+		  ((((BinaryNode)this).NodeType != BinaryNode.and) &&
+		  (((BinaryNode)this).NodeType != BinaryNode.or)))
+					genCode();
+		if(this instanceof UnaryNode) {
+			if(((UnaryNode)this).nodeType == UnaryNode.notOp) {
+				((UnaryNode)this).child.branchIfTrue(lab);
+			}
+		}
+		else if(this instanceof BinaryNode) {
+			switch(((BinaryNode)this).NodeType) {
+				case BinaryNode.and:
+					Label l4 = new Label();
+					((BinaryNode)this).LeftChild.branchIfFalse(l4);
+					((BinaryNode)this).RightChild.branchIfTrue(lab);
+					l4.genCode();
+					break;
+				case BinaryNode.or:
+					Label l5 = new Label();
+					((BinaryNode)this).LeftChild.branchIfTrue(l5);
+					((BinaryNode)this).RightChild.branchIfFalse(lab);
+					l5.genCode();
+					break;
+				case BinaryNode.less:
+					BinaryNode.genComp("jge", lab);
+					break;
+				case BinaryNode.lessEqual:
+					BinaryNode.genComp("jg", lab);
+					break;
+				case BinaryNode.equal:
+					BinaryNode.genComp("jne", lab);
+					break;
+				case BinaryNode.notEqual:
+					BinaryNode.genComp("je", lab);
+					break;
+				case BinaryNode.greater:
+					BinaryNode.genComp("jle", lab);
+					break;
+				case BinaryNode.greaterEqual:
+					BinaryNode.genComp("jl", lab);
+					break;
+			}
+		}
 	}
 
 	public boolean isInteger() { return false; }
@@ -38,8 +153,8 @@ class GlobalNode extends Ast {
 	public String toString() { return "global node " + name; }
 
 	public void genCode() {
-		System.out.println("Global " + name + " " + type);
-		}
+		CodeGen.gen("pushl", "$" + name);
+	}
 }
 
 class IntegerNode extends Ast {
@@ -53,8 +168,8 @@ class IntegerNode extends Ast {
 	public String toString() { return "Integer " + val; }
 
 	public void genCode() {
-		System.out.println("Integer " + val);
-		}
+		CodeGen.gen("pushl", "$" + String.valueOf(val));
+	}
 
 	public boolean isInteger() { return true; }
 
@@ -62,7 +177,7 @@ class IntegerNode extends Ast {
 }
 
 class RealNode extends Ast {
-	private double val;
+	public double val;
 
 	public RealNode (double v) 
 		{ super(PrimitiveType.RealType); val = v; }
@@ -72,8 +187,12 @@ class RealNode extends Ast {
 	public String toString() { return "real " + val; }
 
 	public void genCode() {
-		System.out.println("Real " + val);
-		}
+		Label lab = new Label();
+		CodeGen.addConstant(lab, new Double(val));
+		CodeGen.gen("flds", lab.toString());
+		CodeGen.gen("subl", "$4", "%esp");
+		CodeGen.gen("fstps", "0(%esp)");
+	}
 }
 
 class StringNode extends Ast {
@@ -85,16 +204,18 @@ class StringNode extends Ast {
 	public String toString() { return "string " + val; }
 
 	public void genCode() {
-		System.out.println("String " + val); 
-		}
+		Label lab = new Label();
+		CodeGen.addConstant(lab, val);
+		CodeGen.gen("pushl", "$" + lab.toString());
+	}
 }
 
 class FramePointer extends Ast {
 	public FramePointer () { super(PrimitiveType.VoidType); }
 
 	public void genCode () {
-		System.out.println("frame pointer");
-		}
+		CodeGen.gen("pushl", "%ebp");
+	}
 
 	public String toString() { return "frame pointer"; }
 }
@@ -127,18 +248,47 @@ class UnaryNode extends Ast {
 		}
 
 	public void genCode () {
-		child.genCode();
 		switch(nodeType) {
 			case dereference:
-				System.out.println("dereference " + type); break;
+				if((child instanceof BinaryNode) && (((BinaryNode)child).isSum() != null) &&
+				 (((BinaryNode)child).LeftChild instanceof FramePointer) &&
+				 (((BinaryNode)child).RightChild.isConstant()) ) {
+					String offset = String.valueOf(((IntegerNode)((BinaryNode)child).RightChild).val);
+					CodeGen.gen("pushl", offset + "(%ebp)");
+				}
+				else if(child instanceof GlobalNode) {
+					CodeGen.gen("pushl", ((GlobalNode)child).name);
+				}
+				else {
+					child.genCode();
+					CodeGen.gen("popl",	"%eax");
+					CodeGen.gen("pushl", "0(%eax)");
+				}
+				break;
 			case convertToReal:
-				System.out.println("convert to real" + type); break;
+				child.genCode();
+				CodeGen.gen("fildl", "0(%esp)");
+				CodeGen.gen("fstps", "0(%esp)");
+				break;
 			case notOp:
-				System.out.println("not op " + type); break;
+				break;
 			case negation:
-				System.out.println("numeric negation " + type); break;
+				child.genCode();
+				if(child.type.equals(PrimitiveType.RealType)) {
+					CodeGen.gen("flds", "0(%esp)");
+					CodeGen.gen("fchs");	
+					CodeGen.gen("fstps", "0(%esp)");
+				}
+				else if(child.type.equals(PrimitiveType.IntegerType)) {
+					CodeGen.gen("negl", "0(%esp)");
+				}
+				break;
 			case newOp:
-				System.out.println("new memory " + type); break;
+				child.genCode();
+				CodeGen.gen("call", "malloc");
+				CodeGen.gen("addl", "$4", "%esp");
+				CodeGen.gen("pushl", "%eax");
+				break;
 		}
 	}
 }
@@ -260,39 +410,117 @@ class BinaryNode extends Ast {
 	}
 
 	public void genCode () {
-		LeftChild.genCode();
-		RightChild.genCode();
 		switch (NodeType) {
 			case plus: 
-				System.out.println("do addition " + type); break;
-			case minus: 
-				System.out.println("do subtraction " + type); break;
-			case leftShift: 
-				System.out.println("do left shift " + type); break;
+				if(this.type.equals(PrimitiveType.RealType)) {
+					RightChild.genCode();
+					LeftChild.genCode();
+					CodeGen.gen("flds", "0(%esp)");
+					CodeGen.gen("addl", "$4", "%esp");
+					CodeGen.gen("fadds", "0(%esp)");
+					CodeGen.gen("fstps", "0(%esp)");
+				}
+				else {
+					LeftChild.genCode();
+					if(RightChild.isInteger()) {
+						CodeGen.gen("addl", "$" + RightChild.cValue(), "0(%esp)");
+					}
+					else {
+						RightChild.genCode();
+						CodeGen.gen("popl", "%eax");
+						CodeGen.gen("addl",	"%eax", "0(%esp)");
+					}
+				}
+				break;
+			case minus:
+				if(this.type.equals(PrimitiveType.RealType)) {
+					RightChild.genCode();
+					LeftChild.genCode();
+					CodeGen.gen("flds", "0(%esp)");
+					CodeGen.gen("addl",	"$4", "%esp");
+					CodeGen.gen("fsubs", "0(%esp)");
+					CodeGen.gen("fstps", "0(%esp)");
+				}
+				else {
+					LeftChild.genCode();
+					RightChild.genCode();
+					CodeGen.gen("popl", "%eax");
+					CodeGen.gen("subl", "%eax", "0(%esp)");
+				}
+				break;
+			case leftShift:
+				RightChild.genCode();
+				LeftChild.genCode();
+				CodeGen.gen("popl", "%eax");
+				CodeGen.gen("popl", "%ecx");
+				CodeGen.gen("sall", "%cl", "%eax");
+				CodeGen.gen("pushl", "%eax");
+				break;
 			case times: 
-				System.out.println("do multiplication " + type); break;
+				if(this.type.equals(PrimitiveType.RealType)) {
+					RightChild.genCode();
+					LeftChild.genCode();
+					CodeGen.gen("flds", "0(%esp)");
+					CodeGen.gen("addl", "$4", "%esp");
+					CodeGen.gen("fmuls", "0(%esp)");
+					CodeGen.gen("fstps", "0(%esp)");
+				}
+				else {
+					LeftChild.genCode();
+					RightChild.genCode();
+					CodeGen.gen("popl", "%eax");
+					CodeGen.gen("imull", "0(%esp)");
+					CodeGen.gen("movl", "%eax", "0(%esp)");					
+				}
+				break;
 			case divide: 
-				System.out.println("do division " + type); break;
+				if(this.type.equals(PrimitiveType.RealType)) {
+					RightChild.genCode();
+					LeftChild.genCode();
+					CodeGen.gen("flds", "0(%esp)");
+					CodeGen.gen("addl", "$4", "%esp");
+					CodeGen.gen("fdivs", "0(%esp)");
+					CodeGen.gen("fstps", "0(%esp)");
+				}
+				else {
+					RightChild.genCode();
+					LeftChild.genCode();
+					CodeGen.gen("popl", "%eax");
+					CodeGen.gen("popl", "%ecx");
+					CodeGen.gen("cltd");
+					CodeGen.gen("idivl", "%ecx");
+					CodeGen.gen("pushl", "%eax");
+				}
+				break;
 			case remainder:
-				System.out.println("do remainder " + type); break;
+				RightChild.genCode();
+				LeftChild.genCode();
+				CodeGen.gen("popl", "%eax");
+				CodeGen.gen("popl",	"%ecx");
+				CodeGen.gen("cltd");
+				CodeGen.gen("idivl", "%ecx");
+				CodeGen.gen("pushl", "%edx");
+				break;
 			case and: 
-				System.out.println("do and " + type); break;
-			case or: 
-				System.out.println("do or " + type); break;
-			case less: 
-				System.out.println("compare less " + type); break;
-			case lessEqual: 
-				System.out.println("compare less or equal" + type); break;
-			case equal: 
-				System.out.println("compare equal " + type); break;
-			case notEqual: 
-				System.out.println("compare notEqual " + type); break;
-			case greater: 
-				System.out.println("compare greater " + type); break;
-			case greaterEqual: 
-				System.out.println("compare greaterEqual " + type); break;
+			case or:
+			case less:
+			case lessEqual:
+			case equal:
+			case notEqual:
+			case greater:
+			case greaterEqual:
+				LeftChild.genCode();
+				RightChild.genCode();
+				break;
 			}
 		}
+	
+	static public void genComp(String operator, Label l) {
+		CodeGen.gen("popl", "%eax");
+		CodeGen.gen("popl", "%ecx");
+		CodeGen.gen("cmpl", "%eax", "%ecx");
+		CodeGen.gen(operator, l.toString() );
+	}
 
 	public int NodeType;
 	public Ast LeftChild;
@@ -307,7 +535,7 @@ class FunctionCallNode extends Ast {
 		super (((FunctionType) f.type).returnType);
 		fun = f;
 		args = a;
-		}
+	}
 
 	public String toString() { return "Function Call Node"; }
 
@@ -316,19 +544,32 @@ class FunctionCallNode extends Ast {
 		for (int i = 0; i < args.size(); i++) {
 			Ast arg = (Ast) args.elementAt(i);
 			newArgs.addElement(arg.optimize());
-			}
+		}
 		return new FunctionCallNode(fun, newArgs);
 	}
 
 	public void genCode () {
 		int i = args.size();
+		int totalSize = 0;
 		while (--i >= 0) {
 			Ast arg = (Ast) args.elementAt(i);
 			arg.genCode();
-			System.out.println("push argument " + arg.type);
-			}
+			totalSize += arg.type.size();
+		}
 
-		fun.genCode();
-		System.out.println("function call " + type);
+		CodeGen.gen("call", ((GlobalNode)fun).name);
+		if(totalSize > 0)
+			CodeGen.gen("addl",	"$" + String.valueOf(totalSize), "%esp");
+		Type returnType = ((FunctionType)(this.fun.type)).returnType;
+		if( returnType.size() != 0) {
+			if(returnType.equals(PrimitiveType.RealType)) {
+				CodeGen.gen("subl", "$4", "%esp");
+				CodeGen.gen("fstps", "0(%esp)");
+			}
+			else {
+				CodeGen.gen("pushl", "%eax");
+	
+			}
+		}
 	}
 }
